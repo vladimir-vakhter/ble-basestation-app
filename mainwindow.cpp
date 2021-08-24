@@ -3,10 +3,10 @@
  * mainvindow.ui contains the user interface's widgets
  */
 
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include "mainwindow.h"                            // this is a standard GUI thing
+#include "ui_mainwindow.h"                         // this is a standard GUI thing
 
-#include <QDebug>
+#include <QLowEnergyAdvertisingData>
 
 typedef enum {
     CH_STRING = 0,
@@ -24,43 +24,42 @@ typedef enum {
     DEVICE_NAME,
     DEVICE_CORE_CONF,
     DEVICE_RSSI
-} table_column;
+} device_table_column_index;
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent)             // this is a standard GUI thing
+    : QMainWindow(parent)                           // this is a standard GUI thing
+    , ui(new Ui::MainWindow)                        // this is a standard GUI thing
 {
-    ui->setupUi(this);
-    this->setWindowTitle("BLE-TOOL");
+    ui->setupUi(this);                              // this is a standard GUI thing
+    this->setWindowTitle("BLE Central");
 
    //QBluetoothLocalDevice localDevice;
    //QBluetoothAddress adapterAddress = localDevice.address();
 
     mDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent();
 
-    connect(mDiscoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
-            this, SLOT(addDevice(QBluetoothDeviceInfo)));
-    connect(mDiscoveryAgent, SIGNAL(deviceUpdated(const QBluetoothDeviceInfo, QBluetoothDeviceInfo::Fields)),
-            this, SLOT(deviceUpdated(const QBluetoothDeviceInfo, QBluetoothDeviceInfo::Fields)));
-    connect(mDiscoveryAgent, SIGNAL(finished()),
-            this, SLOT(deviceDiscoveryFinished()));
+    connect(mDiscoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)), this, SLOT(addDevice(QBluetoothDeviceInfo)));
+    connect(mDiscoveryAgent, SIGNAL(deviceUpdated(QBluetoothDeviceInfo, QBluetoothDeviceInfo::Fields)),
+            this, SLOT(deviceUpdated(QBluetoothDeviceInfo, QBluetoothDeviceInfo::Fields)));
+    connect(mDiscoveryAgent, SIGNAL(finished()), this, SLOT(deviceDiscoveryFinished()));
     connect(mDiscoveryAgent, SIGNAL(error(QBluetoothDeviceDiscoveryAgent::Error)),
             this, SLOT(deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error)));
-    connect(mDiscoveryAgent, SIGNAL(canceled()),
-            this, SLOT(deviceDiscoveryCanceled()));
+    connect(mDiscoveryAgent, SIGNAL(canceled()), this, SLOT(deviceDiscoveryCanceled()));
 
-
+    // a table displaying the infromation about Bluetooth devices
     ui->devicesTableWidget->setColumnCount(4);
-    //ui->devicesTableWidget->setRowCount(1);
     QStringList headerLabels;
-    headerLabels << "Address" << "Name" << "CoreConf" << "Signal" ;
+    headerLabels << "Address" << "Name" << "Configuration" << "RSSI, dB";
     ui->devicesTableWidget->setHorizontalHeaderLabels(headerLabels);
 
     ui->devicesTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->devicesTableWidget->resizeColumnsToContents();
 
+    // start Bluetooth device discovery
     mDiscoveryAgent->start();
-    ui->scanningIndicatorLabel->setText("Scanning");
+
+    ui->scanningIndicatorLabel->setStyleSheet("QLabel { background-color : white; color : red; }");
+    ui->scanningIndicatorLabel->setText("Scanning...");
 
     ui->consoleOutputTextEdit->setReadOnly(true);
     ui->consoleOutputTextEdit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
@@ -78,121 +77,118 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->bleUartInputLineEdit, &QLineEdit::returnPressed,
             this, &MainWindow::on_bleUartSendPushButton_clicked);
-
 }
 
-MainWindow::~MainWindow()
+MainWindow::~MainWindow()                           // this is a standard GUI thing
 {
     delete(mDiscoveryAgent);
-    delete ui;
+    delete ui;                                      // this is a standard GUI thing
 }
 
 void MainWindow::addDevice(QBluetoothDeviceInfo info)
 {
-    QString name = info.name();
-    QString addr = info.address().toString();
-/*
-    if (!(info.name() == QString("NRF52-0101") ||
-          info.name() == QString("NRF52-2121"))) {
-        name = QString("[Hidden]");
-        addr = QString("[Hidden]");
-    }
-    */
+//    #ifdef DEBUG
+//        qDebug() << "addDevice() has been called";
+//    #endif
 
-    QString str0 = addr;
-    QString str1 = name;
+    // retrive the information about a Bluetooth device
+    QString bluetooth_device_name = info.name();
+    QString bluetooth_device_addr = info.address().toString();
 
+    QString bluetooth_device_configuration = "";
     QBluetoothDeviceInfo::CoreConfigurations cconf = info.coreConfigurations();
+    if (cconf.testFlag(QBluetoothDeviceInfo::LowEnergyCoreConfiguration))            { bluetooth_device_configuration.append("BLE"); }
+    if (cconf.testFlag(QBluetoothDeviceInfo::UnknownCoreConfiguration))              { bluetooth_device_configuration.append("Unknown"); }
+    if (cconf.testFlag(QBluetoothDeviceInfo::BaseRateCoreConfiguration))             { bluetooth_device_configuration.append("Standard"); }
+    if (cconf.testFlag(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration)) { bluetooth_device_configuration.append("BLE & Standard"); }
 
-    QString str2 = "";
+    QString rssi = QString::number(info.rssi(), 10);
 
-    if (cconf.testFlag(QBluetoothDeviceInfo::LowEnergyCoreConfiguration)) {
-        str2.append(" LowEnergy");
-    }
-    if (cconf.testFlag(QBluetoothDeviceInfo::UnknownCoreConfiguration  )) {
-        str2.append(" Unknown");
-    }
-    if (cconf.testFlag(QBluetoothDeviceInfo::BaseRateCoreConfiguration  )) {
-        str2.append(" BaseRate");
-    }
-    if (cconf.testFlag(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration  )) {
-        str2.append(" BaseRate_&_LowEnergy");
-    }
+    // add the information about Bluetooth device to a table
+    QTableWidgetItem *device_addr_item = new QTableWidgetItem();
+    device_addr_item->setData(Qt::UserRole,QVariant::fromValue(info));
+    device_addr_item->setText(bluetooth_device_addr);
 
-    QString str3 = QString::number(info.rssi(), 10);
+    QTableWidgetItem *device_name_item = new QTableWidgetItem();
+    device_name_item->setText(bluetooth_device_name);
 
-    //QListWidgetItem *it = new QListWidgetItem();
-    //it->setData(Qt::UserRole, QVariant::fromValue(info));
-    //it->setText(str);
+    QTableWidgetItem *device_configuration_item = new QTableWidgetItem();
+    device_configuration_item->setText(bluetooth_device_configuration);
 
-    //ui->devicesListWidget->addItem(it);
-    QTableWidgetItem *it0 = new QTableWidgetItem();
-    it0->setData(Qt::UserRole,QVariant::fromValue(info));
-    it0->setText(str0);
+    QTableWidgetItem *device_rssi_item = new QTableWidgetItem();
+    device_rssi_item->setText(rssi);
 
-    QTableWidgetItem *it1 = new QTableWidgetItem();
-    it1->setText(str1);
+    int  device_record_row = 0;
+    bool device_record_found  = false;
 
-    QTableWidgetItem *it2 = new QTableWidgetItem();
-    it2->setText(str2);
-
-    QTableWidgetItem *it3 = new QTableWidgetItem();
-    it3->setText(str3);
-
-
-    int row = 0;
-    bool found = false;
-
-    for (row = 0; row < ui->devicesTableWidget->rowCount(); row ++) {
-        if (ui->devicesTableWidget->item(row,0)->text() == str0) {
-            found = true;
+    // update an existing row
+    for (; device_record_row < (ui->devicesTableWidget->rowCount()); device_record_row++) {
+        if (ui->devicesTableWidget->item(device_record_row, 0)->text() == bluetooth_device_addr) {
+            device_record_found = true;
             break;
         }
     }
 
-    if (!found) {
+    // add a new row
+    if (!device_record_found) {
         int row = ui->devicesTableWidget->rowCount();
         ui->devicesTableWidget->setRowCount(row + 1);
     }
-    ui->devicesTableWidget->setItem(row, DEVICE_ADDRESS, it0);
-    ui->devicesTableWidget->setItem(row, DEVICE_NAME, it1);
-    ui->devicesTableWidget->setItem(row, DEVICE_CORE_CONF, it2);
-    ui->devicesTableWidget->setItem(row, DEVICE_RSSI, it3);
 
+    ui->devicesTableWidget->setItem(device_record_row, DEVICE_ADDRESS,   device_addr_item);
+    ui->devicesTableWidget->setItem(device_record_row, DEVICE_NAME,      device_name_item);
+    ui->devicesTableWidget->setItem(device_record_row, DEVICE_CORE_CONF, device_configuration_item);
+    ui->devicesTableWidget->setItem(device_record_row, DEVICE_RSSI,      device_rssi_item);
 }
 
 void MainWindow::deviceUpdated(const QBluetoothDeviceInfo info, QBluetoothDeviceInfo::Fields fields)
 {
-    QString addrStr = info.address().toString();
+//    #ifdef DEBUG
+//        qDebug() << "deviceUpdated() has been called";
+//    #endif
 
-    int row = 0;
-    bool found = false;
+    QString bluetooth_device_addr = info.address().toString();
 
-    for (row = 0; row < ui->devicesTableWidget->rowCount(); row ++) {
-        if (ui->devicesTableWidget->item(row,0)->text() == addrStr) {
-            found = true;
+    int device_record_row = 0;
+    bool device_record_found = false;
+
+    for (; device_record_row < ui->devicesTableWidget->rowCount(); device_record_row ++) {
+        if (ui->devicesTableWidget->item(device_record_row, 0)->text() == bluetooth_device_addr) {
+            device_record_found = true;
             break;
         }
     }
 
-    if (found && fields & 1) {
+    int mask = 0x0001;
+    if (device_record_found && (fields & mask)) {
         QTableWidgetItem *it = new QTableWidgetItem();
-        it->setText(QString::number(info.rssi(),10));
-        ui->devicesTableWidget->setItem(row, DEVICE_RSSI, it);
+        it->setText(QString::number(info.rssi(), 10));
+        ui->devicesTableWidget->setItem(device_record_row, DEVICE_RSSI, it);
     }
 }
 
 void MainWindow::deviceDiscoveryFinished()
 {
-    ui->scanningIndicatorLabel->setText("Resting");
-    qDebug() << "Device discovery done!";
+    #ifdef DEBUG
+        qDebug() << "deviceDiscoveryFinished() has been called";
+    #endif
 
+    ui->scanningIndicatorLabel->setStyleSheet("QLabel { background-color : white; color : green; }");
+    ui->scanningIndicatorLabel->setText("Done!");
+
+    int msecTimeout = 5000;
+
+    // call a slot after a given timeout
     if (ui->scanPeriodicallyCheckBox->isChecked()) {
-        QTimer::singleShot(25000, [this]{
-            ui->scanningIndicatorLabel->setText("Scanning");
-            mDiscoveryAgent->start();});
+        QTimer::singleShot(msecTimeout, this,
+                           [this]()
+                           {
+                                ui->scanningIndicatorLabel->setStyleSheet("QLabel { background-color : white; color : red; }");
+                                ui->scanningIndicatorLabel->setText("Scanning...");
+                                mDiscoveryAgent->start();
+                            }
+        );
     }
-
 }
 
 void MainWindow::deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error error)
@@ -207,6 +203,9 @@ void MainWindow::deviceDiscoveryCanceled()
 
 void MainWindow::addService(QBluetoothServiceInfo info)
 {
+    #ifdef DEBUG
+        qDebug() << "addService() has been called";
+    #endif
 
     QString str = QString("%1 %2").arg(info.serviceName()).arg(info.serviceUuid().toString());
 
@@ -259,6 +258,10 @@ void MainWindow::socketError()
 
 void MainWindow::bleServiceDiscovered(const QBluetoothUuid &gatt)
 {
+    #ifdef DEBUG
+        qDebug() << "bleServiceDiscovered() has been called";
+    #endif
+
     //QListWidgetItem *it = new QListWidgetItem();
     QTreeWidgetItem *it = new QTreeWidgetItem();
 
@@ -324,11 +327,17 @@ void MainWindow::bleServiceDiscovered(const QBluetoothUuid &gatt)
 
 void MainWindow::bleServiceDiscoveryFinished()
 {
-    qDebug() << "BLE Discovery done!";
+    #ifdef DEBUG
+        qDebug() << "bleServiceDiscoveryFinished() has been called";
+    #endif
 }
 
 void MainWindow::bleServiceCharacteristic(const QLowEnergyCharacteristic &info, const QByteArray &value)
 {
+    #ifdef DEBUG
+        qDebug() << "bleServiceCharacteristic() has been called";
+    #endif
+
     QString str = info.name();
     //str.append(": ");
     str.append(QString(value));
@@ -353,6 +362,10 @@ void MainWindow::bleServiceCharacteristic(const QLowEnergyCharacteristic &info, 
 
 void MainWindow::bleServiceCharacteristicRead(const QLowEnergyCharacteristic &info, const QByteArray &value)
 {
+    #ifdef DEBUG
+        qDebug() << "bleServiceCharacteristicRead() has been called";
+    #endif
+
     (void) info;
 
     int index = ui->bleCharacteristicReadTypeComboBox->currentIndex();
@@ -386,6 +399,10 @@ void MainWindow::bleServiceCharacteristicRead(const QLowEnergyCharacteristic &in
 
 void MainWindow::on_servicesPushButton_clicked()
 {
+    #ifdef DEBUG
+        qDebug() << "on_servicesPushButton_clicked() has been called";
+    #endif
+
     ui->servicesPushButton->setEnabled(false);
     ui->servicesListWidget->clear();
 
@@ -417,6 +434,10 @@ void MainWindow::on_servicesPushButton_clicked()
 
 void MainWindow::on_connectPushButton_clicked()
 {
+    #ifdef DEBUG
+        qDebug() << "on_connectPushButton_clicked() has been called";
+    #endif
+
     QBluetoothServiceInfo remoteService;
 
     QListWidgetItem *it = ui->servicesListWidget->currentItem();
@@ -458,6 +479,10 @@ void MainWindow::on_connectPushButton_clicked()
 
 void MainWindow::on_bleConnectPushButton_clicked()
 {
+    #ifdef DEBUG
+        qDebug() << "on_bleConnectPushButton_clicked() has been called";
+    #endif
+
     //QBluetoothDeviceInfo dev = ui->devicesListWidget->currentItem()->data(Qt::UserRole).value<QBluetoothDeviceInfo>();
     int row = ui->devicesTableWidget->currentRow();
     QTableWidgetItem *it = ui->devicesTableWidget->item(row, 0);
@@ -491,6 +516,10 @@ void MainWindow::on_bleConnectPushButton_clicked()
 
 void MainWindow::on_bleDisconnectPushButton_clicked()
 {
+    #ifdef DEBUG
+        qDebug() << "on_bleDisconnectPushButton_clicked() has been called";
+    #endif
+
     mBLEControl->disconnectFromDevice();
 
     //ui->bleServicesListWidget->clear();
@@ -500,6 +529,10 @@ void MainWindow::on_bleDisconnectPushButton_clicked()
 
 void MainWindow::on_bleCharacteristicReadPushButton_clicked()
 {
+    #ifdef DEBUG
+        qDebug() << "on_bleCharacteristicReadPushButton_clicked() has been called";
+    #endif
+
     QTreeWidgetItem *it = ui->bleServicesTreeWidget->currentItem();
 
     if (!it) return;
@@ -527,20 +560,38 @@ void MainWindow::on_bleCharacteristicReadPushButton_clicked()
 
 void MainWindow::on_bleCharacteristicWritePushButton_clicked()
 {
-    qDebug() << "not implemented";
+    #ifdef DEBUG
+        qDebug() << "on_bleCharacteristicWritePushButton_clicked() has been called";
+        qDebug() << "not implemented";
+    #endif
 }
 
 void MainWindow::on_scanPeriodicallyCheckBox_clicked(bool checked)
 {
+    #ifdef DEBUG
+        qDebug() << "on_scanPeriodicallyCheckBox_clicked() has been called";
+    #endif
+
+    int msecTimeout = 5000;
+
     if (!mDiscoveryAgent->isActive() && checked) {
-        QTimer::singleShot(1000, [this]{
-            ui->scanningIndicatorLabel->setText("Scanning");
-            mDiscoveryAgent->start();});
+        QTimer::singleShot(msecTimeout, this,
+                           [this]()
+                           {
+                                ui->scanningIndicatorLabel->setStyleSheet("QLabel { background-color : white; color : red; }");
+                                ui->scanningIndicatorLabel->setText("Scanning...");
+                                mDiscoveryAgent->start();
+                            }
+        );
     }
 }
 
 void MainWindow::on_ttyConnectPushButton_clicked()
 {
+    #ifdef DEBUG
+        qDebug() << "on_ttyConnectPushButton_clicked() has been called";
+    #endif
+
     if (mNRF52SerialPort->isOpen()) {
         mNRF52SerialPort->close();
     }
@@ -565,6 +616,10 @@ void MainWindow::on_ttyConnectPushButton_clicked()
 
 void MainWindow::on_NRF52SerialReadyRead()
 {
+    #ifdef DEBUG
+        qDebug() << "on_NRF52SerialReadyRead() has been called";
+    #endif
+
     QByteArray data = mNRF52SerialPort->readAll();
     QString str = QString(data);
     //ui->consoleOutputTextEdit->setc
@@ -579,6 +634,10 @@ void MainWindow::on_NRF52SerialReadyRead()
 
 void MainWindow::on_consoleSendPushButton_clicked()
 {
+    #ifdef DEBUG
+        qDebug() << "on_consoleSendPushButton_clicked() has been called";
+    #endif
+
     if( mNRF52SerialPort->isOpen()) {
 
         QString str = ui->consoleInputLineEdit->text();
@@ -591,6 +650,10 @@ void MainWindow::on_consoleSendPushButton_clicked()
 
 void MainWindow::on_scriptDirBrowsePushButton_clicked()
 {
+    #ifdef DEBUG
+        qDebug() << "on_scriptDirBrowsePushButton_clicked() has been called";
+    #endif
+
     QString str = QFileDialog::getExistingDirectory(nullptr, ("Select Output Folder"), QDir::currentPath());
     if (!str.isEmpty())
         ui->scriptDirLineEdit->setText(str);
@@ -598,14 +661,19 @@ void MainWindow::on_scriptDirBrowsePushButton_clicked()
 
 void MainWindow::on_bleServicesTreeWidget_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
 {
+    #ifdef DEBUG
+        qDebug() << "on_bleServicesTreeWidget_currentItemChanged() has been called";
+    #endif
+
     (void) previous;
     (void) current;
-
 }
 
 void MainWindow::on_listenNotifyPushButton_clicked()
 {
-    qDebug() << "Listen notify clicked";
+    #ifdef DEBUG
+        qDebug() << "on_listenNotifyPushButton_clicked() has been called";
+    #endif
 
     QTreeWidgetItem *it = ui->bleServicesTreeWidget->currentItem();
 
@@ -647,7 +715,9 @@ void MainWindow::on_listenNotifyPushButton_clicked()
 
 void MainWindow::on_bleUartConnectPushButton_clicked()
 {
-    qDebug() << "Ble uart connect clicked";
+    #ifdef DEBUG
+        qDebug() << "on_bleUartConnectPushButton_clicked() has been called";
+    #endif
 
     QTreeWidgetItem *it = ui->bleServicesTreeWidget->currentItem();
 
@@ -701,6 +771,10 @@ void MainWindow::on_bleUartConnectPushButton_clicked()
 
 void MainWindow::on_bleUartSendPushButton_clicked()
 {
+    #ifdef DEBUG
+        qDebug() << "on_bleUartSendPushButton_clicked() has been called";
+    #endif
+
     if (!mBLEUartService) {
         qDebug() << "No BLE uart connected";
     } else {
@@ -720,6 +794,7 @@ void MainWindow::on_bleUartSendPushButton_clicked()
             qDebug() << "Probably not a proper uart!";
             return;
         }
+
         if (tx.isValid()) {
             QByteArray ba = ui->bleUartInputLineEdit->text().append("\n").toLocal8Bit();
             while (ba.size() > 0) {
@@ -728,8 +803,6 @@ void MainWindow::on_bleUartSendPushButton_clicked()
                 ba = ba.mid(20,-1);
             }
         }
-
     }
-
     ui->bleUartInputLineEdit->clear();
 }
