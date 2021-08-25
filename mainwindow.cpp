@@ -359,8 +359,19 @@ void MainWindow::bleServiceCharacteristic(const QLowEnergyCharacteristic &info, 
         qDebug() << "bleServiceCharacteristic() has been called";
     #endif
 
-    QString str = info.name();
-    str.append(QString(value));
+//    QString str = info.name();
+//    str.append(QString(value));
+//    ui->outputPlainTextEdit->appendPlainText(str);
+
+    int base = 2;
+    int numDigits = 8;
+    QChar paddingSymbol = '0';
+
+    QString str = "value (base = " + QString::number(base, 10) + "): ";
+
+    for (int i = 0; i < value.size(); i++) {
+        str += QString::number(value.at(i), base).rightJustified(numDigits, paddingSymbol);
+    }
 
     ui->outputPlainTextEdit->appendPlainText(str);
 }
