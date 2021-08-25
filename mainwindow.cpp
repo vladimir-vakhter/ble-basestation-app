@@ -245,67 +245,105 @@ void MainWindow::bleServiceDiscovered(const QBluetoothUuid &gatt)
         qDebug() << "bleServiceDiscovered() has been called";
     #endif
 
-    //QListWidgetItem *it = new QListWidgetItem();
     QTreeWidgetItem *it = new QTreeWidgetItem();
-
     QLowEnergyService *bleService = mBLEControl->createServiceObject(gatt);
 
     if (bleService) {
-        connect(bleService, &QLowEnergyService::stateChanged,
-                this, [this, bleService, it] (QLowEnergyService::ServiceState state) {
-            qDebug() << "BLE Service state changed:" << state;
-            switch(state) {
-            case QLowEnergyService::InvalidService:  {
-                QTreeWidgetItem *child = new QTreeWidgetItem();
+        connect(bleService, &QLowEnergyService::stateChanged, this,
+                [bleService, it] (QLowEnergyService::ServiceState state)
+                {
+                    #ifdef DEBUG
+                        qDebug() << "BLE Service state changed:" << state;
+                    #endif
+                    switch(state) {
+                        case QLowEnergyService::InvalidService:
+                        {
+                            QTreeWidgetItem *child = new QTreeWidgetItem();
+                            child->setText(0, "Invalid Service");
+                            it->addChild(child);
+                            break;
+                        }
+                        case QLowEnergyService::RemoteService:
+                            break;
+                        case QLowEnergyService::RemoteServiceDiscovering:
+                            break;
+                        case QLowEnergyService::RemoteServiceDiscovered:
+                        {
+                            for (const auto &c : bleService->characteristics()) {
+                                int column = 0;
 
-                child->setText(0,"Invalid Service");
-                it->addChild(child);
-            } break;
-            case QLowEnergyService::RemoteService:
-                break;
-            case QLowEnergyService::RemoteServiceDiscovering:
-                break;
-            case QLowEnergyService::RemoteServiceDiscovered:
-                for (auto c : bleService->characteristics()) {
-                    QTreeWidgetItem *child = new QTreeWidgetItem();
+                                // the human-readable name of the characteristic
+                                QTreeWidgetItem *charChild = new QTreeWidgetItem();
+                                QString charName= "Name: {" + (c.name().isEmpty() ?  "Unknown}; " : c.name() + "}; ");
+                                QString charUuid = "UUID: " + c.uuid().toString() + "; ";
+                                QString charProps = "Props: ";
 
-                    child->setData(0,Qt::UserRole, QVariant::fromValue(c));
-                    if (!c.name().isEmpty()) {
-                        child->setText(0,c.name());
-                    } else {
-                        child->setText(0,c.uuid().toString());
+                                switch (c.properties().toInt()) {
+                                    case 0x00:
+                                        charProps += "Unknown";
+                                        break;
+                                    case 0x01:
+                                        charProps += "Broadcasting";
+                                        break;
+                                    case 0x02:
+                                        charProps += "Read";
+                                        break;
+                                    case 0x04:
+                                        charProps += "WriteNoResponse";
+                                        break;
+                                    case 0x08:
+                                        charProps += "Write";
+                                        break;
+                                    case 0x10:
+                                        charProps += "Notify";
+                                        break;
+                                    case 0x20:
+                                        charProps += "Indicate";
+                                        break;
+                                    case 0x40:
+                                        charProps += "WriteSigned";
+                                        break;
+                                    case 0x80:
+                                        charProps += "ExtendedProperty";
+                                        break;
+                                    case 0x06:
+                                        charProps += "Read, WriteNoResponse";
+                                    break;
+                                    default:
+                                        charProps += "Define combination!";
+                                        break;
+                                }
+
+                                QString charDescription = charName + charUuid + charProps;
+
+                                charChild->setData(column, Qt::UserRole, QVariant::fromValue(c));
+                                charChild->setText(column, charDescription);
+                                it->addChild(charChild);
+                            }
+                            break;
+                        }
+                        case QLowEnergyService::LocalService:
+                        {
+                            QTreeWidgetItem *child = new QTreeWidgetItem();
+                            child->setText(0,"Local Service");
+                            it->addChild(child);
+                            break;
+                        }
                     }
-                    it->addChild(child);
-
                 }
-                break;
-            case QLowEnergyService::LocalService: {
-                QTreeWidgetItem *child = new QTreeWidgetItem();
-
-                child->setText(0,"Local Service");
-                it->addChild(child);
-            } break;
-            }
-        });
-        connect(bleService, &QLowEnergyService::characteristicChanged,
-                this, &MainWindow::bleServiceCharacteristic);
-        connect(bleService, &QLowEnergyService::characteristicRead,
-                this, &MainWindow::bleServiceCharacteristicRead);
-        //mBLEService->characteristicChanged()
+        );
+        connect(bleService, &QLowEnergyService::characteristicChanged, this, &MainWindow::bleServiceCharacteristic);
+        connect(bleService, &QLowEnergyService::characteristicRead, this, &MainWindow::bleServiceCharacteristicRead);
         bleService->discoverDetails();
     } else {
         qDebug() << "Error connecting to BLE Service";
     }
 
-    it->setData(0,Qt::UserRole, QVariant::fromValue(gatt));
-    it->setData(1,Qt::UserRole, QVariant::fromValue(bleService));
-    it->setText(0,gatt.toString());
-    //it->setText(str);
-
+    it->setData(0, Qt::UserRole, QVariant::fromValue(gatt));
+    it->setData(1, Qt::UserRole, QVariant::fromValue(bleService));
+    it->setText(0, gatt.toString());
 
     ui->bleServicesTreeWidget->addTopLevelItem(it);
-    //ui->bleServicesListWidget->addItem(it);
-
 }
 
 void MainWindow::bleServiceDiscoveryFinished()
@@ -322,7 +360,6 @@ void MainWindow::bleServiceCharacteristic(const QLowEnergyCharacteristic &info, 
     #endif
 
     QString str = info.name();
-    //str.append(": ");
     str.append(QString(value));
 
     ui->outputPlainTextEdit->appendPlainText(str);
@@ -484,15 +521,8 @@ void MainWindow::on_bleConnectPushButton_clicked()
 
 void MainWindow::on_bleDisconnectPushButton_clicked()
 {
-    #ifdef DEBUG
-        qDebug() << "on_bleDisconnectPushButton_clicked() has been called";
-    #endif
-
     mBLEControl->disconnectFromDevice();
-
-    //ui->bleServicesListWidget->clear();
     ui->bleServicesTreeWidget->clear();
-    //ui->bleCharacteristicsListWidget->clear();
 }
 
 void MainWindow::on_bleCharacteristicReadPushButton_clicked()
@@ -605,5 +635,4 @@ void MainWindow::on_listenNotifyPushButton_clicked()
     } else {
         qDebug() << "Tx Characteristc descriptor is invalid!";
     }
-
 }
