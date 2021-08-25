@@ -648,17 +648,6 @@ void MainWindow::on_consoleSendPushButton_clicked()
     }
 }
 
-void MainWindow::on_scriptDirBrowsePushButton_clicked()
-{
-    #ifdef DEBUG
-        qDebug() << "on_scriptDirBrowsePushButton_clicked() has been called";
-    #endif
-
-    QString str = QFileDialog::getExistingDirectory(nullptr, ("Select Output Folder"), QDir::currentPath());
-    if (!str.isEmpty())
-        ui->scriptDirLineEdit->setText(str);
-}
-
 void MainWindow::on_bleServicesTreeWidget_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
 {
     #ifdef DEBUG

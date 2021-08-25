@@ -25,7 +25,6 @@
 #include <QSerialPortInfo>                                                          // information about existing serial ports.
 #include <QScrollBar>                                                               // widget provides a vertical or horizontal scroll bar
 #include <QDir>                                                                     // provides access to directory structures and their contents
-#include <QFileDialog>                                                              // a dialog that allow users to select files or directories
 #include <QTreeWidgetItem>                                                          // provides an item for use with a tree view that uses a predefined tree model
 
 QT_BEGIN_NAMESPACE                                                                  // this is a standard GUI thing
@@ -79,7 +78,6 @@ private slots:
     void on_ttyConnectPushButton_clicked();
     void on_NRF52SerialReadyRead();
     void on_consoleSendPushButton_clicked();
-    void on_scriptDirBrowsePushButton_clicked();
     void on_bleServicesTreeWidget_currentItemChanged(QTreeWidgetItem *current,
                                                      QTreeWidgetItem *previous);
     void on_listenNotifyPushButton_clicked();
