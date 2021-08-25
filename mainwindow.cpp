@@ -61,9 +61,6 @@ MainWindow::MainWindow(QWidget *parent)             // this is a standard GUI th
     ui->scanningIndicatorLabel->setStyleSheet("QLabel { background-color : white; color : red; }");
     ui->scanningIndicatorLabel->setText("Scanning...");
 
-    ui->consoleOutputTextEdit->setReadOnly(true);
-    ui->consoleOutputTextEdit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-
     ui->bleUartOutputPlainTextEdit->setReadOnly(true);
     ui->bleUartOutputPlainTextEdit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
 
@@ -71,9 +68,6 @@ MainWindow::MainWindow(QWidget *parent)             // this is a standard GUI th
 
     connect(mNRF52SerialPort, &QSerialPort::readyRead,
             this, &MainWindow::on_NRF52SerialReadyRead);
-
-    connect(ui->consoleInputLineEdit, &QLineEdit::returnPressed,
-            this, &MainWindow::on_consoleSendPushButton_clicked);
 
     connect(ui->bleUartInputLineEdit, &QLineEdit::returnPressed,
             this, &MainWindow::on_bleUartSendPushButton_clicked);
@@ -586,34 +580,6 @@ void MainWindow::on_scanPeriodicallyCheckBox_clicked(bool checked)
     }
 }
 
-void MainWindow::on_ttyConnectPushButton_clicked()
-{
-    #ifdef DEBUG
-        qDebug() << "on_ttyConnectPushButton_clicked() has been called";
-    #endif
-
-    if (mNRF52SerialPort->isOpen()) {
-        mNRF52SerialPort->close();
-    }
-    QString s = ui->ttyLineEdit->text();
-
-    if (s.isNull() || s.isEmpty()) return;
-
-    mNRF52SerialPort->setPortName(s);
-    mNRF52SerialPort->setBaudRate(QSerialPort::Baud115200);
-    mNRF52SerialPort->setDataBits(QSerialPort::Data8);
-    mNRF52SerialPort->setParity(QSerialPort::NoParity);
-    mNRF52SerialPort->setStopBits(QSerialPort::OneStop);
-    mNRF52SerialPort->setFlowControl(QSerialPort::NoFlowControl);
-
-    if(mNRF52SerialPort->open(QIODevice::ReadWrite)) {
-        qDebug() << "NRF52 SERIAL: OK!";
-    } else {
-        qDebug() << "NRF52 SERIAL: ERROR!";
-    }
-
-}
-
 void MainWindow::on_NRF52SerialReadyRead()
 {
     #ifdef DEBUG
@@ -623,29 +589,6 @@ void MainWindow::on_NRF52SerialReadyRead()
     QByteArray data = mNRF52SerialPort->readAll();
     QString str = QString(data);
     //ui->consoleOutputTextEdit->setc
-    QTextCursor c = ui->consoleOutputTextEdit->textCursor();
-    c.movePosition(QTextCursor::End);
-    ui->consoleOutputTextEdit->setTextCursor(c);
-
-    ui->consoleOutputTextEdit->insertPlainText(str);
-    QScrollBar *sb = ui->consoleOutputTextEdit->verticalScrollBar();
-    sb->setValue(sb->maximum());
-}
-
-void MainWindow::on_consoleSendPushButton_clicked()
-{
-    #ifdef DEBUG
-        qDebug() << "on_consoleSendPushButton_clicked() has been called";
-    #endif
-
-    if( mNRF52SerialPort->isOpen()) {
-
-        QString str = ui->consoleInputLineEdit->text();
-        ui->consoleInputLineEdit->clear();
-        str.append("\n");
-
-        mNRF52SerialPort->write(str.toLocal8Bit());
-    }
 }
 
 void MainWindow::on_bleServicesTreeWidget_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)

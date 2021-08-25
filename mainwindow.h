@@ -75,9 +75,7 @@ private slots:
     void on_bleCharacteristicWritePushButton_clicked();
 
     void on_scanPeriodicallyCheckBox_clicked(bool checked);
-    void on_ttyConnectPushButton_clicked();
     void on_NRF52SerialReadyRead();
-    void on_consoleSendPushButton_clicked();
     void on_bleServicesTreeWidget_currentItemChanged(QTreeWidgetItem *current,
                                                      QTreeWidgetItem *previous);
     void on_listenNotifyPushButton_clicked();
