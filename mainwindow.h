@@ -75,12 +75,9 @@ private slots:
     void on_bleCharacteristicWritePushButton_clicked();
 
     void on_scanPeriodicallyCheckBox_clicked(bool checked);
-    void on_NRF52SerialReadyRead();
     void on_bleServicesTreeWidget_currentItemChanged(QTreeWidgetItem *current,
                                                      QTreeWidgetItem *previous);
     void on_listenNotifyPushButton_clicked();
-    void on_bleUartConnectPushButton_clicked();
-    void on_bleUartSendPushButton_clicked();
 
 private:                                                                            // this is a standard GUI thing
     Ui::MainWindow *ui;                                                             // this is a standard GUI thing
@@ -91,9 +88,5 @@ private:                                                                        
 
     QLowEnergyController            *mBLEControl            = nullptr;
     QLowEnergyService               *mBLEService            = nullptr;
-
-    QLowEnergyService               *mBLEUartService        = nullptr;
-
-    QSerialPort *mNRF52SerialPort;
 };                                                                                  // this is a standard GUI thing
 #endif // MAINWINDOW_H                                                              // this is a standard GUI thing
