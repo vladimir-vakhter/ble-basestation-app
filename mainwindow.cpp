@@ -60,17 +60,6 @@ MainWindow::MainWindow(QWidget *parent)             // this is a standard GUI th
 
     ui->scanningIndicatorLabel->setStyleSheet("QLabel { background-color : white; color : red; }");
     ui->scanningIndicatorLabel->setText("Scanning...");
-
-    ui->bleUartOutputPlainTextEdit->setReadOnly(true);
-    ui->bleUartOutputPlainTextEdit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-
-    mNRF52SerialPort = new QSerialPort(this);
-
-    connect(mNRF52SerialPort, &QSerialPort::readyRead,
-            this, &MainWindow::on_NRF52SerialReadyRead);
-
-    connect(ui->bleUartInputLineEdit, &QLineEdit::returnPressed,
-            this, &MainWindow::on_bleUartSendPushButton_clicked);
 }
 
 MainWindow::~MainWindow()                           // this is a standard GUI thing
@@ -336,22 +325,7 @@ void MainWindow::bleServiceCharacteristic(const QLowEnergyCharacteristic &info, 
     //str.append(": ");
     str.append(QString(value));
 
-    // If value comes from uart service, redirect to uart text output
-    if (info.uuid() == QBluetoothUuid(QString("{6e400003-b5a3-f393-e0a9-e50e24dcca9e}"))) {
-        // UART RX
-        QTextCursor text_cursor = QTextCursor(ui->bleUartOutputPlainTextEdit->document());
-        text_cursor.movePosition(QTextCursor::End);
-        text_cursor.insertText(str);
-
-        QScrollBar *sb = ui->bleUartOutputPlainTextEdit->verticalScrollBar();
-        sb->setValue(sb->maximum());
-
-        //ui->bleUartOutputPlainTextEdit->moveCursor (QTextCursor::End);
-        //ui->bleUartOutputPlainTextEdit->appendPlainText(str);
-
-    } else {
-        ui->outputPlainTextEdit->appendPlainText(str);
-    }
+    ui->outputPlainTextEdit->appendPlainText(str);
 }
 
 void MainWindow::bleServiceCharacteristicRead(const QLowEnergyCharacteristic &info, const QByteArray &value)
@@ -580,17 +554,6 @@ void MainWindow::on_scanPeriodicallyCheckBox_clicked(bool checked)
     }
 }
 
-void MainWindow::on_NRF52SerialReadyRead()
-{
-    #ifdef DEBUG
-        qDebug() << "on_NRF52SerialReadyRead() has been called";
-    #endif
-
-    QByteArray data = mNRF52SerialPort->readAll();
-    QString str = QString(data);
-    //ui->consoleOutputTextEdit->setc
-}
-
 void MainWindow::on_bleServicesTreeWidget_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
 {
     #ifdef DEBUG
@@ -643,98 +606,4 @@ void MainWindow::on_listenNotifyPushButton_clicked()
         qDebug() << "Tx Characteristc descriptor is invalid!";
     }
 
-}
-
-void MainWindow::on_bleUartConnectPushButton_clicked()
-{
-    #ifdef DEBUG
-        qDebug() << "on_bleUartConnectPushButton_clicked() has been called";
-    #endif
-
-    QTreeWidgetItem *it = ui->bleServicesTreeWidget->currentItem();
-
-    if (!it) return;
-
-    // the root service here should be of ble uart type.
-    QTreeWidgetItem *p = it;
-
-    while (p->parent() != nullptr) {
-        p = p->parent();
-    }
-
-    if (!(p->data(1, Qt::UserRole).canConvert<QLowEnergyService*>())) {
-        qDebug() << "root of tree is not a service!";
-        return;
-    }
-    QLowEnergyService *s = p->data(1, Qt::UserRole).value<QLowEnergyService*>();
-
-    mBLEUartService = s;
-
-    QList<QLowEnergyCharacteristic> chs =  s->characteristics();
-
-    if (chs.size() != 2) {
-        qDebug() << "Ble uart service should have exactly 2 characteristics";
-        return;
-    }
-
-    QLowEnergyCharacteristic rx;
-    if (chs[0].uuid() == QBluetoothUuid(QString("{6e400003-b5a3-f393-e0a9-e50e24dcca9e}"))) {
-        // 0 is RX
-        rx = s->characteristic(QBluetoothUuid(chs[0].uuid()));
-    } else if (chs[1].uuid() == QBluetoothUuid(QString("{6e400003-b5a3-f393-e0a9-e50e24dcca9e}"))) {
-        // 1 is RX
-        rx = s->characteristic(QBluetoothUuid(chs[1].uuid()));
-    } else  {
-        qDebug() << chs[0].uuid().toString();
-        qDebug() << chs[1].uuid().toString();
-        qDebug() << "Probably not a proper uart!";
-        return;
-    }
-
-    QLowEnergyDescriptor desc = rx.descriptor(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
-
-    if (desc.isValid()) {
-        // enable notification
-        s->writeDescriptor(desc, QByteArray::fromHex("0100"));
-    } else {
-        qDebug() << "Rx Characteristc descriptor is invalid!";
-    }
-}
-
-void MainWindow::on_bleUartSendPushButton_clicked()
-{
-    #ifdef DEBUG
-        qDebug() << "on_bleUartSendPushButton_clicked() has been called";
-    #endif
-
-    if (!mBLEUartService) {
-        qDebug() << "No BLE uart connected";
-    } else {
-
-        QList<QLowEnergyCharacteristic> chs = mBLEUartService->characteristics();
-        QLowEnergyCharacteristic tx;
-
-        if (chs[0].uuid() == QBluetoothUuid(QString("{6e400002-b5a3-f393-e0a9-e50e24dcca9e}"))) {
-            // 0 is RX
-            tx = mBLEUartService->characteristic(QBluetoothUuid(chs[0].uuid()));
-        } else if (chs[1].uuid() == QBluetoothUuid(QString("{6e400002-b5a3-f393-e0a9-e50e24dcca9e}"))) {
-            // 1 is RX
-            tx = mBLEUartService->characteristic(QBluetoothUuid(chs[1].uuid()));
-        } else  {
-            qDebug() << chs[0].uuid().toString();
-            qDebug() << chs[1].uuid().toString();
-            qDebug() << "Probably not a proper uart!";
-            return;
-        }
-
-        if (tx.isValid()) {
-            QByteArray ba = ui->bleUartInputLineEdit->text().append("\n").toLocal8Bit();
-            while (ba.size() > 0) {
-                qDebug() << "ba = " << QString(ba);
-                mBLEUartService->writeCharacteristic(tx, ba.mid(0,20), QLowEnergyService::WriteWithoutResponse);
-                ba = ba.mid(20,-1);
-            }
-        }
-    }
-    ui->bleUartInputLineEdit->clear();
 }
