@@ -89,42 +89,17 @@
                <widget class="QComboBox" name="bleCharacteristicReadTypeComboBox">
                 <item>
                  <property name="text">
-                  <string>String</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Int8</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Int16</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Int32</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>UInt8</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>UInt16</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>UInt32</string>
+                  <string>Bin</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
                   <string>Hex</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Unicode</string>
                  </property>
                 </item>
                </widget>

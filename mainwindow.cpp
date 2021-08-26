@@ -6,24 +6,13 @@
 #include "mainwindow.h"                            // this is a standard GUI thing
 #include "ui_mainwindow.h"                         // this is a standard GUI thing
 
-#include <QLowEnergyAdvertisingData>
+typedef enum {
+    CH_BIN = 0, CH_HEX, CH_UNICODE
+} output_format_type;
 
 typedef enum {
-    CH_STRING = 0,
-    CH_INT8,
-    CH_INT16,
-    CH_INT32,
-    CH_UINT8,
-    CH_UINT16,
-    CH_UINT32,
-    CH_HEX
-} ch_type;
-
-typedef enum {
-    DEVICE_ADDRESS = 0,
-    DEVICE_NAME,
-    DEVICE_CORE_CONF,
-    DEVICE_RSSI
+    DEVICE_ADDRESS = 0, DEVICE_NAME,
+    DEVICE_CORE_CONF, DEVICE_RSSI
 } device_table_column_index;
 
 MainWindow::MainWindow(QWidget *parent)             // this is a standard GUI thing
@@ -198,7 +187,6 @@ void MainWindow::addService(QBluetoothServiceInfo info)
     it->setText(str); //info.serviceName());
 
     ui->servicesListWidget->addItem(it);
-
 }
 
 void MainWindow::addServiceError(QBluetoothDeviceDiscoveryAgent::Error error)
@@ -353,64 +341,54 @@ void MainWindow::bleServiceDiscoveryFinished()
     #endif
 }
 
+void MainWindow::format_output(const int& format_selector_index, const QByteArray& value, QString& output)
+{
+    if (format_selector_index == CH_UNICODE) {
+        output = "value (Unicode): " + QString(value);
+    } else {
+        int base = 0;
+        int numDigits = 0;
+        QChar paddingSymbol = '0';
+
+        if (format_selector_index == CH_BIN)  {
+            base = 2;
+            numDigits = 8;
+        } else if (format_selector_index == CH_HEX) {
+            base = 16;
+        }
+
+        output = "value (base = " + QString::number(base, 10) + "): ";
+
+        for (int i = 0; i < value.size(); i++) {
+            output += QString::number(value.at(i), base).rightJustified(numDigits, paddingSymbol);
+        }
+    }
+}
+
 void MainWindow::bleServiceCharacteristic(const QLowEnergyCharacteristic &info, const QByteArray &value)
 {
     #ifdef DEBUG
         qDebug() << "bleServiceCharacteristic() has been called";
     #endif
 
-//    QString str = info.name();
-//    str.append(QString(value));
-//    ui->outputPlainTextEdit->appendPlainText(str);
+    int output_format_selector_index = ui->bleCharacteristicReadTypeComboBox->currentIndex();
+    QString output;
+    format_output(output_format_selector_index, value, output);
 
-    int base = 2;
-    int numDigits = 8;
-    QChar paddingSymbol = '0';
-
-    QString str = "value (base = " + QString::number(base, 10) + "): ";
-
-    for (int i = 0; i < value.size(); i++) {
-        str += QString::number(value.at(i), base).rightJustified(numDigits, paddingSymbol);
-    }
-
-    ui->outputPlainTextEdit->appendPlainText(str);
+    ui->outputPlainTextEdit->appendPlainText(output);
 }
 
-void MainWindow::bleServiceCharacteristicRead(const QLowEnergyCharacteristic &info, const QByteArray &value)
+void MainWindow::bleServiceCharacteristicRead(const QLowEnergyCharacteristic& info, const QByteArray& value)
 {
     #ifdef DEBUG
         qDebug() << "bleServiceCharacteristicRead() has been called";
     #endif
 
-    (void) info;
+    int output_format_selector_index = ui->bleCharacteristicReadTypeComboBox->currentIndex();
+    QString output;
+    format_output(output_format_selector_index, value, output);
 
-    int index = ui->bleCharacteristicReadTypeComboBox->currentIndex();
-    QString str;
-
-    switch(index) {
-    case CH_STRING:  //String
-        str = QString(value);
-        break;
-    case CH_INT8:  // int8;
-        str = QString("%1").number(value.at(0));
-        break;
-    case CH_INT16:
-        break;
-    case CH_INT32:
-        break;
-    case CH_UINT8:
-        break;
-    case CH_UINT16:
-        break;
-    case CH_UINT32:
-        break;
-    case CH_HEX:
-        for (auto c: value)  {
-            str.append(QString("0x%1").number(c,16));
-        }
-    }
-
-    ui->outputPlainTextEdit->appendPlainText(str);
+    ui->outputPlainTextEdit->appendPlainText(output);
 }
 
 void MainWindow::on_servicesPushButton_clicked()
@@ -422,7 +400,6 @@ void MainWindow::on_servicesPushButton_clicked()
     ui->servicesPushButton->setEnabled(false);
     ui->servicesListWidget->clear();
 
-    //QListWidgetItem *it = ui->devicesListWidget->currentItem();
     QTableWidgetItem *it = ui->devicesTableWidget->currentItem();
 
     QBluetoothDeviceInfo info = it->data(Qt::UserRole).value<QBluetoothDeviceInfo>();
