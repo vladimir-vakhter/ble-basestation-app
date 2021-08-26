@@ -247,7 +247,7 @@
                      <item>
                       <layout class="QGridLayout" name="gridLayout_13">
                        <item row="0" column="0">
-                        <widget class="QLineEdit" name="lineEdit"/>
+                        <widget class="QLineEdit" name="bleCharacteristicWriteLineEdit"/>
                        </item>
                        <item row="0" column="1">
                         <widget class="QPushButton" name="bleCharacteristicWritePushButton">
@@ -285,7 +285,7 @@
                           </widget>
                          </item>
                          <item>
-                          <widget class="QComboBox" name="comboBox_2">
+                          <widget class="QComboBox" name="bleCharacteristicWriteTypecomboBox">
                            <item>
                             <property name="text">
                              <string>Bin</string>
