@@ -45,20 +45,20 @@ public slots:
                        QBluetoothDeviceInfo::Fields fields);
 
     void deviceDiscoveryFinished();
-    void deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error error);
-    void deviceDiscoveryCanceled();
+    inline void deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error error) { qDebug() << "Device discovery error: " << error; }
+    inline void deviceDiscoveryCanceled() { qDebug() << "Device discovery canceled!"; }
 
     void addService(QBluetoothServiceInfo info);
-    void addServiceError(QBluetoothDeviceDiscoveryAgent::Error);
+    inline void addServiceError(QBluetoothDeviceDiscoveryAgent::Error error) { qDebug() << error; }
     void addServiceDone();
 
     void socketRead();
-    void socketConnected();
-    void socketDisconnected();
-    void socketError();
+    inline void socketConnected() { qDebug() << "socket connect"; }
+    inline void socketDisconnected() { qDebug() << "socket disconnect"; }
+    inline void socketError() { qDebug() << "socket error"; };
 
     void bleServiceDiscovered(const QBluetoothUuid &gatt);
-    void bleServiceDiscoveryFinished();
+    inline void bleServiceDiscoveryFinished() { qDebug() << "bleServiceDiscoveryFinished() has been called"; }
 
     void bleServiceCharacteristic(const QLowEnergyCharacteristic &info,
                                   const QByteArray &value);

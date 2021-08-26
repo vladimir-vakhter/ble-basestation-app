@@ -3,8 +3,8 @@
  * mainvindow.ui contains the user interface's widgets
  */
 
-#include "mainwindow.h"                            // this is a standard GUI thing
-#include "ui_mainwindow.h"                         // this is a standard GUI thing
+#include "ui_mainwindow.h"
+#include "mainwindow.h"
 
 typedef enum {
     CH_BIN = 0, CH_HEX, CH_UNICODE
@@ -15,15 +15,10 @@ typedef enum {
     DEVICE_CORE_CONF, DEVICE_RSSI
 } device_table_column_index;
 
-MainWindow::MainWindow(QWidget *parent)             // this is a standard GUI thing
-    : QMainWindow(parent)                           // this is a standard GUI thing
-    , ui(new Ui::MainWindow)                        // this is a standard GUI thing
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);                              // this is a standard GUI thing
-    this->setWindowTitle("BLE Central");
-
-   //QBluetoothLocalDevice localDevice;
-   //QBluetoothAddress adapterAddress = localDevice.address();
+    ui->setupUi(this);
+    this->setWindowTitle("BLE Client App");
 
     mDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent();
 
@@ -47,14 +42,16 @@ MainWindow::MainWindow(QWidget *parent)             // this is a standard GUI th
     // start Bluetooth device discovery
     mDiscoveryAgent->start();
 
+    // update the status of the BLE discovery process
     ui->scanningIndicatorLabel->setStyleSheet("QLabel { background-color : white; color : red; }");
     ui->scanningIndicatorLabel->setText("Scanning...");
 }
 
-MainWindow::~MainWindow()                           // this is a standard GUI thing
+MainWindow::~MainWindow()
 {
+    // TODO: add other objects allocated on the heap
     delete(mDiscoveryAgent);
-    delete ui;                                      // this is a standard GUI thing
+    delete ui;
 }
 
 void MainWindow::addDevice(QBluetoothDeviceInfo info)
@@ -163,16 +160,6 @@ void MainWindow::deviceDiscoveryFinished()
     }
 }
 
-void MainWindow::deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error error)
-{
-    qDebug() << "Device discovery error: " << error;
-}
-
-void MainWindow::deviceDiscoveryCanceled()
-{
-    qDebug() << "Device discovery canceled!";
-}
-
 void MainWindow::addService(QBluetoothServiceInfo info)
 {
     #ifdef DEBUG
@@ -189,15 +176,7 @@ void MainWindow::addService(QBluetoothServiceInfo info)
     ui->servicesListWidget->addItem(it);
 }
 
-void MainWindow::addServiceError(QBluetoothDeviceDiscoveryAgent::Error error)
-{
-   qDebug() << error;
-}
-
-void MainWindow::addServiceDone()
-{
-    ui->servicesPushButton->setEnabled(true);
-}
+void MainWindow::addServiceDone() { ui->servicesPushButton->setEnabled(true); }
 
 void MainWindow::socketRead()
 {
@@ -210,21 +189,6 @@ void MainWindow::socketRead()
         len = mSocket->read(buffer, 1024);
         qDebug() << len << " : " << QString(buffer);
     }
-}
-
-void MainWindow::socketConnected()
-{
-    qDebug() << "socket connect";
-}
-
-void MainWindow::socketDisconnected()
-{
-    qDebug() << "socket disconnect";
-}
-
-void MainWindow::socketError()
-{
-    qDebug() << "socket error";
 }
 
 void MainWindow::bleServiceDiscovered(const QBluetoothUuid &gatt)
@@ -332,13 +296,6 @@ void MainWindow::bleServiceDiscovered(const QBluetoothUuid &gatt)
     it->setText(0, gatt.toString());
 
     ui->bleServicesTreeWidget->addTopLevelItem(it);
-}
-
-void MainWindow::bleServiceDiscoveryFinished()
-{
-    #ifdef DEBUG
-        qDebug() << "bleServiceDiscoveryFinished() has been called";
-    #endif
 }
 
 void MainWindow::format_output(const int& format_selector_index, const QByteArray& value, QString& output)
