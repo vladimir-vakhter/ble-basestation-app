@@ -88,5 +88,8 @@ private:                                                                        
 
     QLowEnergyController            *mBLEControl            = nullptr;
     QLowEnergyService               *mBLEService            = nullptr;
+
+    void format_output(const int& format_selector_index, const QByteArray& value, QString& output);
+
 };                                                                                  // this is a standard GUI thing
 #endif // MAINWINDOW_H                                                              // this is a standard GUI thing
