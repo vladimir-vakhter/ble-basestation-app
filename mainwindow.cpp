@@ -477,7 +477,6 @@ void MainWindow::on_bleCharacteristicReadPushButton_clicked()
     #endif
 
     QTreeWidgetItem *it = ui->bleServicesTreeWidget->currentItem();
-
     if (!it) return;
 
     if (it->data(0, Qt::UserRole).canConvert<QLowEnergyCharacteristic>()) {
@@ -505,8 +504,38 @@ void MainWindow::on_bleCharacteristicWritePushButton_clicked()
 {
     #ifdef DEBUG
         qDebug() << "on_bleCharacteristicWritePushButton_clicked() has been called";
-        qDebug() << "not implemented";
     #endif
+
+    QTreeWidgetItem *it = ui->bleServicesTreeWidget->currentItem();
+    if (!it) return;
+
+    if (it->data(0, Qt::UserRole).canConvert<QLowEnergyCharacteristic>()) {
+        QLowEnergyCharacteristic ch = it->data(0,Qt::UserRole).value<QLowEnergyCharacteristic>();
+        qDebug() << "Should be ok to convert to characteristic";
+
+        QTreeWidgetItem *p = it->parent();
+
+        while (p->parent() != nullptr) {
+            p = p->parent();
+        }
+
+        if (p->data(1, Qt::UserRole).canConvert<QLowEnergyService*>()) {
+            QLowEnergyService *s = p->data(1, Qt::UserRole).value<QLowEnergyService*>();
+            qDebug() << "Should be ok to convert to a service..";
+
+            QString value = ui->bleCharacteristicWriteLineEdit->text();
+//            QByteArray b64 = value.toUtf8().toBase64();
+
+//            std::string utf8_value = value.toUtf8().constData();
+//            std::string current_locale_text = value.toLocal8Bit().constData(); // Windows only
+
+//            bool parseOK;
+//            unsigned int hexValue = value.toUInt(&parseOK, 16);
+
+            s->writeCharacteristic(ch, QByteArray::fromHex("0001")/*QByteArray::fromBase64(b64)*//*QByteArray::fromStdString(current_locale_text)*/,
+                                   QLowEnergyService::WriteWithoutResponse);
+        }
+    }
 }
 
 void MainWindow::on_scanPeriodicallyCheckBox_clicked(bool checked)
