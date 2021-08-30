@@ -502,38 +502,37 @@ void MainWindow::on_bleCharacteristicReadPushButton_clicked()
 
 void MainWindow::on_bleCharacteristicWritePushButton_clicked()
 {
-    #ifdef DEBUG
-        qDebug() << "on_bleCharacteristicWritePushButton_clicked() has been called";
-    #endif
-
+    // if no items selected, return
     QTreeWidgetItem *it = ui->bleServicesTreeWidget->currentItem();
     if (!it) return;
 
+    // if a characteristic selected
     if (it->data(0, Qt::UserRole).canConvert<QLowEnergyCharacteristic>()) {
-        QLowEnergyCharacteristic ch = it->data(0,Qt::UserRole).value<QLowEnergyCharacteristic>();
-        qDebug() << "Should be ok to convert to characteristic";
+        QLowEnergyCharacteristic ch = it->data(0, Qt::UserRole).value<QLowEnergyCharacteristic>();
 
+        // define its top-level parent (BLE service)
         QTreeWidgetItem *p = it->parent();
-
-        while (p->parent() != nullptr) {
-            p = p->parent();
-        }
+        while (p->parent() != nullptr) { p = p->parent(); }
 
         if (p->data(1, Qt::UserRole).canConvert<QLowEnergyService*>()) {
             QLowEnergyService *s = p->data(1, Qt::UserRole).value<QLowEnergyService*>();
-            qDebug() << "Should be ok to convert to a service..";
 
+            // read out and parse the input value
             QString value = ui->bleCharacteristicWriteLineEdit->text();
-//            QByteArray b64 = value.toUtf8().toBase64();
 
-//            std::string utf8_value = value.toUtf8().constData();
-//            std::string current_locale_text = value.toLocal8Bit().constData(); // Windows only
+            bool parseOK;
+            int parseBase = 16;
+            value.toUInt(&parseOK, parseBase);
 
-//            bool parseOK;
-//            unsigned int hexValue = value.toUInt(&parseOK, 16);
-
-            s->writeCharacteristic(ch, QByteArray::fromHex("0001")/*QByteArray::fromBase64(b64)*//*QByteArray::fromStdString(current_locale_text)*/,
-                                   QLowEnergyService::WriteWithoutResponse);
+            if(parseOK) {
+                // transmit the UTF-8 representation of input value or show a hint how to fix the error
+                s->writeCharacteristic(ch, QByteArray::fromHex(value.toUtf8()), QLowEnergyService::WriteWithoutResponse);
+                ui->statusbar->clearMessage();
+                ui->statusbar->showMessage("0x" + value + " has been written!");
+            } else {
+                ui->statusbar->clearMessage();
+                ui->statusbar->showMessage("Convertion to HEX failed: only characters '0-9' and 'a-f' are allowed! Fix the value and try to write again!");
+            }
         }
     }
 }
