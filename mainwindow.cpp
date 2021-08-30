@@ -512,6 +512,18 @@ void MainWindow::on_bleCharacteristicWritePushButton_clicked()
     if (it->data(0, Qt::UserRole).canConvert<QLowEnergyCharacteristic>()) {
         QLowEnergyCharacteristic ch = it->data(0, Qt::UserRole).value<QLowEnergyCharacteristic>();
 
+//        int writeNoResponse = 0x04;
+//        int write = 0x08;
+//        int writeSigned = 0x40;
+
+//        int charProps = ch.properties().toInt();
+
+//        if (!(charProps && writeNoResponse) || !(charProps && write) || !(charProps && writeSigned)) {
+//            ui->statusbar->clearMessage();
+//            ui->statusbar->showMessage("The characteristic's descriptor is invalid!");
+//            return;
+//        }
+
         // the top-level parent holds the service
         QTreeWidgetItem *p = it->parent();
         while (p->parent() != nullptr) { p = p->parent(); }
@@ -563,6 +575,12 @@ void MainWindow::on_listenNotifyPushButton_clicked()
     }
 
     QLowEnergyCharacteristic characteristic = it->data(0, Qt::UserRole).value<QLowEnergyCharacteristic>();
+
+    if (characteristic.properties().toInt() != QLowEnergyCharacteristic::Notify) {
+        ui->statusbar->clearMessage();
+        ui->statusbar->showMessage("The characteristic's descriptor is invalid!");
+        return;
+    }
 
     QTreeWidgetItem *p = it;
     while (p->parent() != nullptr) { p = p->parent(); }
