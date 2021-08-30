@@ -502,9 +502,13 @@ void MainWindow::on_bleCharacteristicReadPushButton_clicked()
 
 void MainWindow::on_bleCharacteristicWritePushButton_clicked()
 {
-    // if no items selected, return
+    // if no items selected, give a hint to the user and return
     QTreeWidgetItem *it = ui->bleServicesTreeWidget->currentItem();
-    if (!it) return;
+    if (!it) {
+        ui->statusbar->clearMessage();
+        ui->statusbar->showMessage("First, connect to a BLE device and select a WRITE characteristic!");
+        return;
+    }
 
     // if a characteristic selected
     if (it->data(0, Qt::UserRole).canConvert<QLowEnergyCharacteristic>()) {
