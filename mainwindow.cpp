@@ -7,7 +7,7 @@
 #include "mainwindow.h"
 
 typedef enum {
-    CH_BIN = 0, CH_HEX, CH_UNICODE
+    CH_HEX = 0, CH_BIN, CH_UNICODE
 } output_format_type;
 
 typedef enum {
