@@ -57,10 +57,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::addDevice(QBluetoothDeviceInfo info)
 {
-//    #ifdef DEBUG
-//        qDebug() << "addDevice() has been called";
-//    #endif
-
     // retrive the information about a Bluetooth device
     QString bluetooth_device_name = info.name();
     QString bluetooth_device_addr = info.address().toString();
@@ -473,10 +469,6 @@ void MainWindow::on_bleDisconnectPushButton_clicked()
 
 void MainWindow::on_bleCharacteristicReadPushButton_clicked()
 {
-    #ifdef DEBUG
-        qDebug() << "on_bleCharacteristicReadPushButton_clicked() has been called";
-    #endif
-
     // if no items selected, give a hint to the user and return
     QTreeWidgetItem *it = ui->bleServicesTreeWidget->currentItem();
     if (!it) {
@@ -503,6 +495,10 @@ void MainWindow::on_bleCharacteristicReadPushButton_clicked()
             // A characteristic can only be read if the service is in the ServiceDiscovered state and belongs to the service.
             // If one of these conditions is not true the QLowEnergyService::OperationError is set.
         }
+    } else {
+        ui->statusbar->clearMessage();
+        ui->statusbar->showMessage("Not a characteristic! Select a characteristic!");
+        return;
     }
 }
 
@@ -543,7 +539,56 @@ void MainWindow::on_bleCharacteristicWritePushButton_clicked()
                 ui->statusbar->clearMessage();
                 ui->statusbar->showMessage("Convertion to HEX failed: only characters '0-9' and 'a-f' are allowed! Fix the value and try to write again!");
             }
+        } else {
+            ui->statusbar->clearMessage();
+            ui->statusbar->showMessage("Cannot find the enclosing service!");
+            return;
         }
+    } else {
+        ui->statusbar->clearMessage();
+        ui->statusbar->showMessage("Not a characteristic! Select a characteristic!");
+        return;
+    }
+}
+
+void MainWindow::on_listenNotifyPushButton_clicked()
+{
+    QTreeWidgetItem *it = ui->bleServicesTreeWidget->currentItem();
+    if (!it) {
+        ui->statusbar->clearMessage();
+        ui->statusbar->showMessage("First, connect to a BLE device and select a NOTIFY characteristic!");
+        return;
+    }
+
+    if (!(it->data(0, Qt::UserRole).canConvert<QLowEnergyCharacteristic>())) {
+        ui->statusbar->clearMessage();
+        ui->statusbar->showMessage("Not a characteristic! Select a characteristic!");
+        return;
+    }
+
+    QLowEnergyCharacteristic characteristic = it->data(0, Qt::UserRole).value<QLowEnergyCharacteristic>();
+
+    QTreeWidgetItem *p = it;
+    while (p->parent() != nullptr) { p = p->parent(); }
+
+    if (!(p->data(1, Qt::UserRole).canConvert<QLowEnergyService*>())) {
+        ui->statusbar->clearMessage();
+        ui->statusbar->showMessage("Cannot find the enclosing service!");
+        return;
+    };
+
+    QLowEnergyService *s = p->data(1, Qt::UserRole).value<QLowEnergyService*>();
+
+    QLowEnergyDescriptor charDescriptor = characteristic.descriptor(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
+
+    if (charDescriptor.isValid()) {
+        // enable notification
+        ui->statusbar->clearMessage();
+        ui->statusbar->showMessage("Listen for the selected notifications!");
+        s->writeDescriptor(charDescriptor, QByteArray::fromHex("0100"));
+    } else {
+        ui->statusbar->clearMessage();
+        ui->statusbar->showMessage("The characteristic's descriptor is invalid!");
     }
 }
 
@@ -575,47 +620,4 @@ void MainWindow::on_bleServicesTreeWidget_currentItemChanged(QTreeWidgetItem *cu
 
     (void) previous;
     (void) current;
-}
-
-void MainWindow::on_listenNotifyPushButton_clicked()
-{
-    #ifdef DEBUG
-        qDebug() << "on_listenNotifyPushButton_clicked() has been called";
-    #endif
-
-    QTreeWidgetItem *it = ui->bleServicesTreeWidget->currentItem();
-
-    if (!it) return;
-
-    if (!(it->data(0, Qt::UserRole).canConvert<QLowEnergyCharacteristic>()))  return;
-
-    QLowEnergyCharacteristic ch = it->data(0,Qt::UserRole).value<QLowEnergyCharacteristic>();
-    qDebug() << "Should be ok to convert to characteristic";
-
-    QTreeWidgetItem *p = it;
-
-    while (p->parent() != nullptr) {
-        p = p->parent();
-    }
-
-    if (!(p->data(1, Qt::UserRole).canConvert<QLowEnergyService*>())) return;
-
-    QLowEnergyService *s = p->data(1, Qt::UserRole).value<QLowEnergyService*>();
-    qDebug() << "Should be ok to convert to a service..";
-
-    const QLowEnergyCharacteristic txChar = s->characteristic(QBluetoothUuid(ch.uuid()));
-
-    if (!txChar.isValid()){
-        qDebug() << "BLE Tx characteristic not found";
-        return;
-    }
-
-     QLowEnergyDescriptor desc = txChar.descriptor(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
-
-    if (desc.isValid()) {
-        // enable notification
-        s->writeDescriptor(desc, QByteArray::fromHex("0100"));
-    } else {
-        qDebug() << "Tx Characteristc descriptor is invalid!";
-    }
 }
