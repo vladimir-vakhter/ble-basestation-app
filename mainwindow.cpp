@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     mDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent();
 
+    // connect signals and slots
     connect(mDiscoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)), this, SLOT(addDevice(QBluetoothDeviceInfo)));
     connect(mDiscoveryAgent, SIGNAL(deviceUpdated(QBluetoothDeviceInfo, QBluetoothDeviceInfo::Fields)),
             this, SLOT(deviceUpdated(QBluetoothDeviceInfo, QBluetoothDeviceInfo::Fields)));
@@ -476,26 +477,31 @@ void MainWindow::on_bleCharacteristicReadPushButton_clicked()
         qDebug() << "on_bleCharacteristicReadPushButton_clicked() has been called";
     #endif
 
+    // if no items selected, give a hint to the user and return
     QTreeWidgetItem *it = ui->bleServicesTreeWidget->currentItem();
-    if (!it) return;
+    if (!it) {
+        ui->statusbar->clearMessage();
+        ui->statusbar->showMessage("First, connect to a BLE device and select a READ characteristic!");
+        return;
+    }
 
+    // if a characteristic selected
     if (it->data(0, Qt::UserRole).canConvert<QLowEnergyCharacteristic>()) {
         QLowEnergyCharacteristic ch = it->data(0,Qt::UserRole).value<QLowEnergyCharacteristic>();
-        qDebug() << "Should be ok to convert to characteristic";
 
         // the top-level parent holds the service
-        // TODO: it is not absolute guaranteed that top-level parent holds the service.
-        //       Needs a more robust way of finding the enclosing service.
         QTreeWidgetItem *p = it->parent();
-
-        while (p->parent() != nullptr) {
-            p = p->parent();
-        }
+        while (p->parent() != nullptr) { p = p->parent(); }
 
         if (p->data(1, Qt::UserRole).canConvert<QLowEnergyService*>()) {
             QLowEnergyService *s = p->data(1, Qt::UserRole).value<QLowEnergyService*>();
-            qDebug() << "Should be ok to convert to a service..";
+            // read the characteristic
             s->readCharacteristic(ch);
+
+            // TODO: If the operation is successful, the characteristicRead() signal is emitted.
+            // TODO: Otherwise the CharacteristicReadError is set.
+            // A characteristic can only be read if the service is in the ServiceDiscovered state and belongs to the service.
+            // If one of these conditions is not true the QLowEnergyService::OperationError is set.
         }
     }
 }
@@ -514,7 +520,7 @@ void MainWindow::on_bleCharacteristicWritePushButton_clicked()
     if (it->data(0, Qt::UserRole).canConvert<QLowEnergyCharacteristic>()) {
         QLowEnergyCharacteristic ch = it->data(0, Qt::UserRole).value<QLowEnergyCharacteristic>();
 
-        // define its top-level parent (BLE service)
+        // the top-level parent holds the service
         QTreeWidgetItem *p = it->parent();
         while (p->parent() != nullptr) { p = p->parent(); }
 
