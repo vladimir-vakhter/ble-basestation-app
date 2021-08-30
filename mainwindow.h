@@ -60,7 +60,7 @@ public slots:
     void bleServiceDiscovered(const QBluetoothUuid &gatt);
     inline void bleServiceDiscoveryFinished() { qDebug() << "bleServiceDiscoveryFinished() has been called"; }
 
-    void bleServiceCharacteristic(const QLowEnergyCharacteristic &info,
+    void bleServiceCharacteristicNotify(const QLowEnergyCharacteristic &info,
                                   const QByteArray &value);
     void bleServiceCharacteristicRead(const QLowEnergyCharacteristic &info,
                                       const QByteArray &value);

@@ -281,7 +281,7 @@ void MainWindow::bleServiceDiscovered(const QBluetoothUuid &gatt)
                     }
                 }
         );
-        connect(bleService, &QLowEnergyService::characteristicChanged, this, &MainWindow::bleServiceCharacteristic);
+        connect(bleService, &QLowEnergyService::characteristicChanged, this, &MainWindow::bleServiceCharacteristicNotify);
         connect(bleService, &QLowEnergyService::characteristicRead, this, &MainWindow::bleServiceCharacteristicRead);
         bleService->discoverDetails();
     } else {
@@ -298,7 +298,7 @@ void MainWindow::bleServiceDiscovered(const QBluetoothUuid &gatt)
 void MainWindow::format_output(const int& format_selector_index, const QByteArray& value, QString& output)
 {
     if (format_selector_index == CH_UNICODE) {
-        output = "value (Unicode): " + QString(value);
+        output = QString(value);
     } else {
         int base = 0;
         int numDigits = 0;
@@ -311,23 +311,18 @@ void MainWindow::format_output(const int& format_selector_index, const QByteArra
             base = 16;
         }
 
-        output = "value (base = " + QString::number(base, 10) + "): ";
-
         for (int i = 0; i < value.size(); i++) {
             output += QString::number(value.at(i), base).rightJustified(numDigits, paddingSymbol);
         }
     }
 }
 
-void MainWindow::bleServiceCharacteristic(const QLowEnergyCharacteristic &info, const QByteArray &value)
+void MainWindow::bleServiceCharacteristicNotify(const QLowEnergyCharacteristic &info, const QByteArray &value)
 {
-    #ifdef DEBUG
-        qDebug() << "bleServiceCharacteristic() has been called";
-    #endif
-
     int output_format_selector_index = ui->bleCharacteristicReadTypeComboBox->currentIndex();
     QString output;
     format_output(output_format_selector_index, value, output);
+    output = "Notification: " + output;
 
     ui->outputPlainTextEdit->appendPlainText(output);
 }
@@ -341,6 +336,7 @@ void MainWindow::bleServiceCharacteristicRead(const QLowEnergyCharacteristic& in
     int output_format_selector_index = ui->bleCharacteristicReadTypeComboBox->currentIndex();
     QString output;
     format_output(output_format_selector_index, value, output);
+    output = "Read: " + output;
 
     ui->outputPlainTextEdit->appendPlainText(output);
 }
