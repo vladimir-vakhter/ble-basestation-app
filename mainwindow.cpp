@@ -51,7 +51,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 MainWindow::~MainWindow()
 {
     // TODO: add other objects allocated on the heap
-    delete(mDiscoveryAgent);
+    delete mDiscoveryAgent;
+
+    // user interface
     delete ui;
 }
 
@@ -322,7 +324,7 @@ void MainWindow::bleServiceCharacteristicNotify(const QLowEnergyCharacteristic &
     int output_format_selector_index = ui->bleCharacteristicReadTypeComboBox->currentIndex();
     QString output;
     format_output(output_format_selector_index, value, output);
-    output = "Notification: " + output;
+    output = "Notify: " + output;
 
     ui->outputPlainTextEdit->appendPlainText(output);
 }
@@ -639,3 +641,36 @@ void MainWindow::on_clearOutputPushButton_clicked()
     ui->outputPlainTextEdit->clear();
 }
 
+void MainWindow::on_browsePushButton_clicked()
+{
+    csvFilePath = QFileDialog::getOpenFileName(this, tr("Save Characteristics"),
+                                                    "", tr("CSV File (*.csv);;All Files (*)"));
+
+    if (csvFilePath.isEmpty()) return;
+    ui->saveLineEdit->setText(csvFilePath);
+
+    append_to_csv("test");
+    append_to_csv("it");
+    append_to_csv("out");
+}
+
+void MainWindow::append_to_csv(const QString& data)
+{
+    // TODO: add mutexes to make thread-safe
+
+    // attempt to open csv-file
+    QFile file(csvFilePath);
+    if(!file.open(QIODevice::Append)) {
+        QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+        return;
+    }
+
+    // write data to file
+    QTextStream stream(&file);
+
+//    stream << value << ",";    // next column
+    stream << data << "\n";   // next row
+
+    stream.flush();
+    file.close();
+}

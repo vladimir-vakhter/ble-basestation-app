@@ -555,10 +555,10 @@
                         <item>
                          <layout class="QHBoxLayout" name="horizontalLayout_10">
                           <item>
-                           <widget class="QLineEdit" name="lineEdit"/>
+                           <widget class="QLineEdit" name="saveLineEdit"/>
                           </item>
                           <item>
-                           <widget class="QPushButton" name="pushButton">
+                           <widget class="QPushButton" name="browsePushButton">
                             <property name="minimumSize">
                              <size>
                               <width>97</width>

@@ -7,7 +7,7 @@
 #include <QDebug>                                                                   // output stream for debugging information
 #endif
 
-#include <QMainWindow>                                                              // this is a standard GUI thing
+#include <QMainWindow>
 
 #include <QBluetoothAddress>                                                        // assigns an address to the Bluetooth device
 #include <QBluetoothServiceDiscoveryAgent>                                          // enables us to query for Bluetooth services
@@ -26,18 +26,20 @@
 #include <QScrollBar>                                                               // widget provides a vertical or horizontal scroll bar
 #include <QDir>                                                                     // provides access to directory structures and their contents
 #include <QTreeWidgetItem>                                                          // provides an item for use with a tree view that uses a predefined tree model
+#include <QFileDialog>
+#include <QMessageBox>
 
-QT_BEGIN_NAMESPACE                                                                  // this is a standard GUI thing
-namespace Ui { class MainWindow; }                                                  // this is a standard GUI thing
-QT_END_NAMESPACE                                                                    // this is a standard GUI thing
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow                                               // this is a standard GUI thing
-{                                                                                   // this is a standard GUI thing
-    Q_OBJECT                                                                        // this is a standard GUI thing
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
 
-public:                                                                             // this is a standard GUI thing
-    MainWindow(QWidget *parent = nullptr);                                          // this is a standard GUI thing
-    ~MainWindow();                                                                  // this is a standard GUI thing
+public:
+    MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
 
 public slots:
     void addDevice(QBluetoothDeviceInfo info);
@@ -81,8 +83,10 @@ private slots:
 
     void on_clearOutputPushButton_clicked();
 
-private:                                                                            // this is a standard GUI thing
-    Ui::MainWindow *ui;                                                             // this is a standard GUI thing
+    void on_browsePushButton_clicked();
+
+private:
+    Ui::MainWindow *ui;
 
     QBluetoothDeviceDiscoveryAgent  *mDiscoveryAgent        = nullptr;              // discovers the Bluetooth devices nearby
     QBluetoothServiceDiscoveryAgent *mServiceDiscoveryAgent = nullptr;
@@ -91,7 +95,9 @@ private:                                                                        
     QLowEnergyController            *mBLEControl            = nullptr;
     QLowEnergyService               *mBLEService            = nullptr;
 
-    void format_output(const int& format_selector_index, const QByteArray& value, QString& output);
+    QString                         csvFilePath             = "";                   // the name of the file where to store the values of READ and NOTIFY characteristics
 
-};                                                                                  // this is a standard GUI thing
-#endif // MAINWINDOW_H                                                              // this is a standard GUI thing
+    void format_output(const int& format_selector_index, const QByteArray& value, QString& output);
+    void append_to_csv(const QString& data);
+};
+#endif // MAINWINDOW_H
