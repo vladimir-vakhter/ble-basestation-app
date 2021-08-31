@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>834</width>
-    <height>850</height>
+    <width>864</width>
+    <height>1000</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -341,20 +341,20 @@
                          </item>
                         </layout>
                        </item>
-                       <item>
-                        <spacer name="verticalSpacer">
-                         <property name="orientation">
-                          <enum>Qt::Vertical</enum>
-                         </property>
-                         <property name="sizeHint" stdset="0">
-                          <size>
-                           <width>20</width>
-                           <height>40</height>
-                          </size>
-                         </property>
-                        </spacer>
-                       </item>
                       </layout>
+                     </item>
+                     <item>
+                      <spacer name="verticalSpacer">
+                       <property name="orientation">
+                        <enum>Qt::Vertical</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>20</width>
+                         <height>40</height>
+                        </size>
+                       </property>
+                      </spacer>
                      </item>
                     </layout>
                    </widget>
@@ -366,86 +366,177 @@
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_3">
                      <item>
-                      <widget class="QPlainTextEdit" name="outputPlainTextEdit">
-                       <property name="sizePolicy">
-                        <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
-                         <horstretch>0</horstretch>
-                         <verstretch>0</verstretch>
-                        </sizepolicy>
+                      <widget class="QGroupBox" name="groupBox_4">
+                       <property name="title">
+                        <string>Output</string>
                        </property>
-                       <property name="minimumSize">
-                        <size>
-                         <width>0</width>
-                         <height>70</height>
-                        </size>
-                       </property>
-                       <property name="readOnly">
-                        <bool>true</bool>
-                       </property>
+                       <layout class="QVBoxLayout" name="verticalLayout_6">
+                        <item>
+                         <widget class="QPlainTextEdit" name="outputPlainTextEdit">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>70</height>
+                           </size>
+                          </property>
+                          <property name="readOnly">
+                           <bool>true</bool>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <layout class="QHBoxLayout" name="horizontalLayout_7">
+                          <item>
+                           <spacer name="horizontalSpacer_4">
+                            <property name="orientation">
+                             <enum>Qt::Horizontal</enum>
+                            </property>
+                            <property name="sizeHint" stdset="0">
+                             <size>
+                              <width>40</width>
+                              <height>20</height>
+                             </size>
+                            </property>
+                           </spacer>
+                          </item>
+                          <item>
+                           <widget class="QLabel" name="label_2">
+                            <property name="text">
+                             <string>Format:</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QComboBox" name="bleCharacteristicReadTypeComboBox">
+                            <item>
+                             <property name="text">
+                              <string>HEX</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>BIN</string>
+                             </property>
+                            </item>
+                            <item>
+                             <property name="text">
+                              <string>UNICODE</string>
+                             </property>
+                            </item>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
+                       </layout>
                       </widget>
                      </item>
                      <item>
-                      <layout class="QHBoxLayout" name="horizontalLayout">
-                       <item>
-                        <spacer name="horizontalSpacer_4">
-                         <property name="orientation">
-                          <enum>Qt::Horizontal</enum>
-                         </property>
-                         <property name="sizeHint" stdset="0">
-                          <size>
-                           <width>40</width>
-                           <height>20</height>
-                          </size>
-                         </property>
-                        </spacer>
-                       </item>
-                       <item>
-                        <widget class="QLabel" name="label_2">
-                         <property name="text">
-                          <string>Format:</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QComboBox" name="bleCharacteristicReadTypeComboBox">
-                         <item>
-                          <property name="text">
-                           <string>HEX</string>
+                      <widget class="QGroupBox" name="groupBox_5">
+                       <property name="title">
+                        <string>Control</string>
+                       </property>
+                       <layout class="QHBoxLayout" name="horizontalLayout_12">
+                        <item>
+                         <spacer name="horizontalSpacer_6">
+                          <property name="orientation">
+                           <enum>Qt::Horizontal</enum>
                           </property>
-                         </item>
-                         <item>
-                          <property name="text">
-                           <string>BIN</string>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>40</width>
+                            <height>20</height>
+                           </size>
                           </property>
-                         </item>
-                         <item>
+                         </spacer>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="listenNotifyPushButton">
                           <property name="text">
-                           <string>UNICODE</string>
+                           <string>Listen Notify</string>
                           </property>
-                         </item>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QPushButton" name="bleCharacteristicReadPushButton">
-                         <property name="minimumSize">
-                          <size>
-                           <width>97</width>
-                           <height>0</height>
-                          </size>
-                         </property>
-                         <property name="text">
-                          <string>Read</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QPushButton" name="listenNotifyPushButton">
-                         <property name="text">
-                          <string>Listen Notify</string>
-                         </property>
-                        </widget>
-                       </item>
-                      </layout>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="bleCharacteristicReadPushButton">
+                          <property name="minimumSize">
+                           <size>
+                            <width>97</width>
+                            <height>0</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string>Read</string>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QGroupBox" name="groupBox_3">
+                       <property name="title">
+                        <string>Save</string>
+                       </property>
+                       <layout class="QVBoxLayout" name="verticalLayout_9">
+                        <item>
+                         <layout class="QHBoxLayout" name="horizontalLayout_9">
+                          <item>
+                           <widget class="QCheckBox" name="checkBox_2">
+                            <property name="text">
+                             <string>Notify</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <widget class="QCheckBox" name="checkBox">
+                            <property name="text">
+                             <string>Read</string>
+                            </property>
+                           </widget>
+                          </item>
+                          <item>
+                           <spacer name="horizontalSpacer_5">
+                            <property name="orientation">
+                             <enum>Qt::Horizontal</enum>
+                            </property>
+                            <property name="sizeHint" stdset="0">
+                             <size>
+                              <width>40</width>
+                              <height>20</height>
+                             </size>
+                            </property>
+                           </spacer>
+                          </item>
+                         </layout>
+                        </item>
+                        <item>
+                         <layout class="QHBoxLayout" name="horizontalLayout_10">
+                          <item>
+                           <widget class="QLineEdit" name="lineEdit"/>
+                          </item>
+                          <item>
+                           <widget class="QPushButton" name="pushButton">
+                            <property name="minimumSize">
+                             <size>
+                              <width>97</width>
+                              <height>0</height>
+                             </size>
+                            </property>
+                            <property name="text">
+                             <string>Browse</string>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
+                        </item>
+                       </layout>
+                      </widget>
                      </item>
                     </layout>
                    </widget>
@@ -531,7 +622,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>834</width>
+     <width>864</width>
      <height>22</height>
     </rect>
    </property>
