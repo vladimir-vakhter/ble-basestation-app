@@ -79,6 +79,8 @@ private slots:
                                                      QTreeWidgetItem *previous);
     void on_listenNotifyPushButton_clicked();
 
+    void on_clearOutputPushButton_clicked();
+
 private:                                                                            // this is a standard GUI thing
     Ui::MainWindow *ui;                                                             // this is a standard GUI thing
 

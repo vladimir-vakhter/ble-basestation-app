@@ -633,3 +633,9 @@ void MainWindow::on_bleServicesTreeWidget_currentItemChanged(QTreeWidgetItem *cu
     (void) previous;
     (void) current;
 }
+
+void MainWindow::on_clearOutputPushButton_clicked()
+{
+    ui->outputPlainTextEdit->clear();
+}
+
