@@ -6,6 +6,7 @@ This application is used to:
 4. Display the Bluetooth services and characteristics of the connected device.
 5. Listen to the Notify characteristics.
 6. Read and write the characteristics with the corresponding properties/permissions.
+7. Save the content of the Read and Notify characteristics into a csv file.
 
 ## Tests
 The application was tested with the STM development board "P-NUCLEO-WB55" (the STM32WB55 MCU) flashed with the proprietary P2P application example [[AN5289](https://www.st.com/resource/en/application_note/dm00598033-building-wireless-applications-with-stm32wb-series-microcontrollers-stmicroelectronics.pdf)].
