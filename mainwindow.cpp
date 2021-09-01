@@ -297,50 +297,66 @@ void MainWindow::bleServiceDiscovered(const QBluetoothUuid &gatt)
     ui->bleServicesTreeWidget->addTopLevelItem(it);
 }
 
-void MainWindow::format_output(const int& format_selector_index, const QByteArray& value, QString& output)
+void MainWindow::format_output(const int& format_selector_index, const QByteArray& rawBytesValue, QString& formattedOutput, QString& format)
 {
     if (format_selector_index == CH_UNICODE) {
-        output = QString(value);
+        format = "Unicode";
+        formattedOutput = QString(rawBytesValue);
     } else {
         int base = 0;
         int numDigits = 0;
         QChar paddingSymbol = '0';
 
         if (format_selector_index == CH_BIN)  {
+            format = "bin";
             base = 2;
             numDigits = 8;
         } else if (format_selector_index == CH_HEX) {
+            format = "hex";
             base = 16;
         }
 
-        for (int i = 0; i < value.size(); i++) {
-            output += QString::number(value.at(i), base).rightJustified(numDigits, paddingSymbol);
+        for (int i = 0; i < rawBytesValue.size(); i++) {
+            formattedOutput += QString::number(rawBytesValue.at(i), base).rightJustified(numDigits, paddingSymbol);
         }
     }
 }
 
-void MainWindow::bleServiceCharacteristicNotify(const QLowEnergyCharacteristic &info, const QByteArray &value)
+void MainWindow::bleServiceCharacteristicReadNotify(const QString& header, const QByteArray &value)
 {
+    // if other threads try to call lock() on this mutex, they will block until this thread calls unlock()
+    mutex.lock();
+
+    // format value
     int output_format_selector_index = ui->bleCharacteristicReadTypeComboBox->currentIndex();
     QString output;
-    format_output(output_format_selector_index, value, output);
-    output = "Notify: " + output;
+    QString format;
+    format_output(output_format_selector_index, value, output, format);
 
+    // save if checkbox is checked
+    if((header == "Notify" && ui->notifyCheckBox->isChecked()) ||
+       (header == "Read" && ui->readCheckBox->isChecked()))
+    {
+        append_to_csv(header, output);
+    }
+
+    // display
+    output = header + ": " + output;
     ui->outputPlainTextEdit->appendPlainText(output);
+
+    mutex.unlock();
+}
+
+void MainWindow::bleServiceCharacteristicNotify(const QLowEnergyCharacteristic &info, const QByteArray &value)
+{
+    QString header = "Notify";
+    bleServiceCharacteristicReadNotify(header, value);
 }
 
 void MainWindow::bleServiceCharacteristicRead(const QLowEnergyCharacteristic& info, const QByteArray& value)
 {
-    #ifdef DEBUG
-        qDebug() << "bleServiceCharacteristicRead() has been called";
-    #endif
-
-    int output_format_selector_index = ui->bleCharacteristicReadTypeComboBox->currentIndex();
-    QString output;
-    format_output(output_format_selector_index, value, output);
-    output = "Read: " + output;
-
-    ui->outputPlainTextEdit->appendPlainText(output);
+    QString header = "Read";
+    bleServiceCharacteristicReadNotify(header, value);
 }
 
 void MainWindow::on_servicesPushButton_clicked()
@@ -648,28 +664,25 @@ void MainWindow::on_browsePushButton_clicked()
 
     if (csvFilePath.isEmpty()) return;
     ui->saveLineEdit->setText(csvFilePath);
-
-    append_to_csv("test");
-    append_to_csv("it");
-    append_to_csv("out");
 }
 
-void MainWindow::append_to_csv(const QString& data)
+void MainWindow::append_to_csv(const QString& header, const QString& data)
 {
-    // TODO: add mutexes to make thread-safe
-
-    // attempt to open csv-file
+    // attempt to open csv-file to append it
     QFile file(csvFilePath);
+
     if(!file.open(QIODevice::Append)) {
-        QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+        QMessageBox::information(this, tr("Unable to open file to append"),
+                                 file.errorString());
         return;
     }
 
-    // write data to file
+    // append data to file
     QTextStream stream(&file);
 
-//    stream << value << ",";    // next column
-    stream << data << "\n";   // next row
+    // stream the data to the file as a pair "header-data"
+    stream << header << ",";                                // comma is used to move to the next column
+    stream << data << "\n";                                 // '\n' is used to move to the next row
 
     stream.flush();
     file.close();

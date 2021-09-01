@@ -28,6 +28,7 @@
 #include <QTreeWidgetItem>                                                          // provides an item for use with a tree view that uses a predefined tree model
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QMutex>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -62,10 +63,8 @@ public slots:
     void bleServiceDiscovered(const QBluetoothUuid &gatt);
     inline void bleServiceDiscoveryFinished() { qDebug() << "bleServiceDiscoveryFinished() has been called"; }
 
-    void bleServiceCharacteristicNotify(const QLowEnergyCharacteristic &info,
-                                  const QByteArray &value);
-    void bleServiceCharacteristicRead(const QLowEnergyCharacteristic &info,
-                                      const QByteArray &value);
+    void bleServiceCharacteristicNotify(const QLowEnergyCharacteristic &info, const QByteArray &value);
+    void bleServiceCharacteristicRead(const QLowEnergyCharacteristic &info, const QByteArray &value);
 
 private slots:
     void on_servicesPushButton_clicked();
@@ -88,16 +87,18 @@ private slots:
 private:
     Ui::MainWindow *ui;
 
-    QBluetoothDeviceDiscoveryAgent  *mDiscoveryAgent        = nullptr;              // discovers the Bluetooth devices nearby
+    QBluetoothDeviceDiscoveryAgent  *mDiscoveryAgent        = nullptr;     // discovers the Bluetooth devices nearby
     QBluetoothServiceDiscoveryAgent *mServiceDiscoveryAgent = nullptr;
     QBluetoothSocket                *mSocket                = nullptr;
 
     QLowEnergyController            *mBLEControl            = nullptr;
     QLowEnergyService               *mBLEService            = nullptr;
 
-    QString                         csvFilePath             = "";                   // the name of the file where to store the values of READ and NOTIFY characteristics
+    QString                         csvFilePath             = "";          // path to the file that stores the values of READ and NOTIFY characteristics
+    QMutex                          mutex;                                  // "guards" shared resources in case READ and NOTIFY appear simultaneously
 
-    void format_output(const int& format_selector_index, const QByteArray& value, QString& output);
-    void append_to_csv(const QString& data);
+    void bleServiceCharacteristicReadNotify(const QString &header, const QByteArray &value);
+    void format_output(const int& format_selector_index, const QByteArray& rawBytesValue, QString& formattedOutput, QString& format);
+    void append_to_csv(const QString& header, const QString& data);
 };
 #endif // MAINWINDOW_H
