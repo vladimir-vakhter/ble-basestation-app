@@ -648,10 +648,6 @@ void MainWindow::on_browsePushButton_clicked()
 
     if (csvFilePath.isEmpty()) return;
     ui->saveLineEdit->setText(csvFilePath);
-
-    append_to_csv("test");
-    append_to_csv("it");
-    append_to_csv("out");
 }
 
 void MainWindow::append_to_csv(const QString& data)
