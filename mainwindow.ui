@@ -524,14 +524,14 @@
                         <item>
                          <layout class="QHBoxLayout" name="horizontalLayout_9">
                           <item>
-                           <widget class="QCheckBox" name="checkBox_2">
+                           <widget class="QCheckBox" name="notifyCheckBox">
                             <property name="text">
                              <string>Notify</string>
                             </property>
                            </widget>
                           </item>
                           <item>
-                           <widget class="QCheckBox" name="checkBox">
+                           <widget class="QCheckBox" name="readCheckBox">
                             <property name="text">
                              <string>Read</string>
                             </property>
