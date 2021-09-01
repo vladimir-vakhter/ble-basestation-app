@@ -43,7 +43,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // start Bluetooth device discovery
     mDiscoveryAgent->start();
 
-//    ui->deviceControlGroupBox->setStyleSheet(QStringLiteral("QGroupBox{border:2px solid gray;border-radius:5px;margin-top: 3ex;background-color: red;}"));
+    // the comment below is left to show how to stylize groupboxes and may be deleted
+    //ui->deviceControlGroupBox->setStyleSheet(QStringLiteral("QGroupBox{border:2px solid gray;border-radius:5px;margin-top: 3ex;background-color: red;}"));
 
     // update the status of the BLE discovery process
     ui->scanningIndicatorLabel->setStyleSheet("QLabel { background-color : white; color : red; }");
@@ -52,10 +53,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
 MainWindow::~MainWindow()
 {
-    // TODO: add other objects allocated on the heap
     delete mDiscoveryAgent;
-
-    // user interface
+    delete mServiceDiscoveryAgent;
+    delete mSocket;
+    delete mBLEControl;
+    delete mBLEService;
     delete ui;
 }
 
@@ -113,10 +115,6 @@ void MainWindow::addDevice(QBluetoothDeviceInfo info)
 
 void MainWindow::deviceUpdated(const QBluetoothDeviceInfo info, QBluetoothDeviceInfo::Fields fields)
 {
-//    #ifdef DEBUG
-//        qDebug() << "deviceUpdated() has been called";
-//    #endif
-
     QString bluetooth_device_addr = info.address().toString();
 
     int device_record_row = 0;
@@ -139,10 +137,6 @@ void MainWindow::deviceUpdated(const QBluetoothDeviceInfo info, QBluetoothDevice
 
 void MainWindow::deviceDiscoveryFinished()
 {
-    #ifdef DEBUG
-        qDebug() << "deviceDiscoveryFinished() has been called";
-    #endif
-
     ui->scanningIndicatorLabel->setStyleSheet("QLabel { background-color : white; color : green; }");
     ui->scanningIndicatorLabel->setText("Done!");
 
@@ -163,10 +157,6 @@ void MainWindow::deviceDiscoveryFinished()
 
 void MainWindow::addService(QBluetoothServiceInfo info)
 {
-    #ifdef DEBUG
-        qDebug() << "addService() has been called";
-    #endif
-
     QString str = QString("%1 %2").arg(info.serviceName()).arg(info.serviceUuid().toString());
 
     QListWidgetItem *it = new QListWidgetItem();
@@ -184,8 +174,6 @@ void MainWindow::socketRead()
     char buffer[1024];
     qint64 len;
 
-    qDebug() << "socket read";
-
     while (mSocket->bytesAvailable()) {
         len = mSocket->read(buffer, 1024);
         qDebug() << len << " : " << QString(buffer);
@@ -194,10 +182,6 @@ void MainWindow::socketRead()
 
 void MainWindow::bleServiceDiscovered(const QBluetoothUuid &gatt)
 {
-    #ifdef DEBUG
-        qDebug() << "bleServiceDiscovered() has been called";
-    #endif
-
     QTreeWidgetItem *it = new QTreeWidgetItem();
     QLowEnergyService *bleService = mBLEControl->createServiceObject(gatt);
 
