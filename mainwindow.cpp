@@ -43,6 +43,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // start Bluetooth device discovery
     mDiscoveryAgent->start();
 
+//    ui->deviceControlGroupBox->setStyleSheet(QStringLiteral("QGroupBox{border:2px solid gray;border-radius:5px;margin-top: 3ex;background-color: red;}"));
+
     // update the status of the BLE discovery process
     ui->scanningIndicatorLabel->setStyleSheet("QLabel { background-color : white; color : red; }");
     ui->scanningIndicatorLabel->setText("Scanning...");

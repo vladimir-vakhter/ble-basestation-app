@@ -280,7 +280,7 @@
                 </layout>
                </item>
                <item>
-                <widget class="QGroupBox" name="groupBox_2">
+                <widget class="QGroupBox" name="deviceControlGroupBox">
                  <property name="title">
                   <string>Services and Characteristics</string>
                  </property>
