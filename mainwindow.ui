@@ -46,7 +46,7 @@
       </property>
       <widget class="QWidget" name="devicesTab">
        <attribute name="title">
-        <string>Devices</string>
+        <string>BLE Devices</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_8">
         <property name="leftMargin">
@@ -148,7 +148,7 @@
            </property>
            <widget class="QWidget" name="ble_tab">
             <attribute name="title">
-             <string>BLE</string>
+             <string>Device</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_15">
              <item row="2" column="2">
