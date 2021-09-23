@@ -155,20 +155,6 @@ void MainWindow::deviceDiscoveryFinished()
     }
 }
 
-void MainWindow::addService(QBluetoothServiceInfo info)
-{
-    QString str = QString("%1 %2").arg(info.serviceName()).arg(info.serviceUuid().toString());
-
-    QListWidgetItem *it = new QListWidgetItem();
-
-    it->setData(Qt::UserRole, QVariant::fromValue(info));
-    it->setText(str); //info.serviceName());
-
-    ui->servicesListWidget->addItem(it);
-}
-
-void MainWindow::addServiceDone() { ui->servicesPushButton->setEnabled(true); }
-
 void MainWindow::socketRead()
 {
     char buffer[1024];
@@ -344,85 +330,6 @@ void MainWindow::bleServiceCharacteristicRead(const QLowEnergyCharacteristic& in
     QString header = "Read";
     bleServiceCharacteristicReadNotify(header, value);
 }
-
-void MainWindow::on_servicesPushButton_clicked()
-{
-    #ifdef DEBUG
-        qDebug() << "on_servicesPushButton_clicked() has been called";
-    #endif
-
-    ui->servicesPushButton->setEnabled(false);
-    ui->servicesListWidget->clear();
-
-    QTableWidgetItem *it = ui->devicesTableWidget->currentItem();
-
-    QBluetoothDeviceInfo info = it->data(Qt::UserRole).value<QBluetoothDeviceInfo>();
-
-    qDebug() << info.name();
-    qDebug() << info.address();
-
-
-    mServiceDiscoveryAgent = new QBluetoothServiceDiscoveryAgent();
-    mServiceDiscoveryAgent->setRemoteAddress(info.address());
-
-    if (mServiceDiscoveryAgent->error()) {
-        qDebug() << "wrong device address";
-    }
-
-    connect(mServiceDiscoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
-            this, SLOT(addService(QBluetoothServiceInfo)));
-    connect(mServiceDiscoveryAgent, SIGNAL(finished()),
-            this, SLOT(addServiceDone()));
-//    connect(mServiceDiscoveryAgent, QOverload<QBluetoothServiceDiscoveryAgent::Error>::of(&QBluetoothServiceDiscoveryAgent::error),
-//        [=](QBluetoothServiceDiscoveryAgent::Error error){ qDebug() << error; ui->servicesPushButton->setEnabled(true); });
-
-    mServiceDiscoveryAgent->start();
-}
-
-void MainWindow::on_connectPushButton_clicked()
-{
-    #ifdef DEBUG
-        qDebug() << "on_connectPushButton_clicked() has been called";
-    #endif
-
-    QBluetoothServiceInfo remoteService;
-
-    QListWidgetItem *it = ui->servicesListWidget->currentItem();
-
-    if (!it) return;
-
-    QBluetoothServiceInfo info = it->data(Qt::UserRole).value<QBluetoothServiceInfo>();
-
-    qDebug () << info.serviceName();
-    qDebug () << info.serviceUuid();
-    qDebug () << info.serviceDescription();
-
-    //info.setServiceUuid(QBluetoothUuid((quint16)0x2A19));
-    qDebug () << info.serviceUuid();
-
-    if (mSocket) {
-        qDebug() << "socket exists, deleting";
-        disconnect(mSocket, SIGNAL(readyRead()), this, SLOT(socketRead()));
-        disconnect(mSocket, SIGNAL(connected()), this, SLOT(socketConnected()));
-        disconnect(mSocket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
-        //disconnect(mSocket, SIGNAL(error ()), this, SLOT(socketError()));
-        mSocket->disconnectFromService();
-        delete(mSocket);
-    }
-
-    // Connect to service
-    mSocket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
-
-    qDebug() << "Create socket";
-    mSocket->connectToService(info);
-    qDebug() << "ConnectToService done";
-
-    connect(mSocket, SIGNAL(readyRead()), this, SLOT(socketRead()));
-    connect(mSocket, SIGNAL(connected()), this, SLOT(socketConnected()));
-    connect(mSocket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
-    //connect(mSocket, SIGNAL(error()), this, SLOT(socketError()));
-}
-
 
 void MainWindow::on_bleConnectPushButton_clicked()
 {

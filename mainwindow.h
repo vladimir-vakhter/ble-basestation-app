@@ -11,7 +11,7 @@
 
 #include <QBluetoothAddress>                                 // assigns an address to the Bluetooth device
 #include <QBluetoothServiceDiscoveryAgent>                   // enables us to query for Bluetooth services
-#include <QBluetoothServiceInfo>                             // enables access to the attributes of a Bluetooth service
+//#include <QBluetoothServiceInfo>                             // enables access to the attributes of a Bluetooth service
 #include <QBluetoothLocalDevice>                             // enables access to the local Bluetooth device
 #include <QBluetoothUuid>                                    // generates a UUID for each Bluetooth service
 #include <QBluetoothSocket>                                  // enables connection to a Bluetooth device running a bluetooth server
@@ -40,10 +40,6 @@ public slots:
     inline void deviceDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error error) { qDebug() << "Device discovery error: " << error; }
     inline void deviceDiscoveryCanceled() { qDebug() << "Device discovery canceled!"; }
 
-    void addService(QBluetoothServiceInfo info);
-    inline void addServiceError(QBluetoothDeviceDiscoveryAgent::Error error) { qDebug() << error; }
-    void addServiceDone();
-
     void socketRead();
     inline void socketConnected() { qDebug() << "socket connect"; }
     inline void socketDisconnected() { qDebug() << "socket disconnect"; }
@@ -56,8 +52,6 @@ public slots:
     void bleServiceCharacteristicRead(const QLowEnergyCharacteristic &info, const QByteArray &value);
 
 private slots:
-    void on_servicesPushButton_clicked();
-    void on_connectPushButton_clicked();
     void on_bleConnectPushButton_clicked();
     void on_bleDisconnectPushButton_clicked();
 
