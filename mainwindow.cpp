@@ -11,8 +11,10 @@ typedef enum {
 } output_format_type;
 
 typedef enum {
-    DEVICE_ADDRESS = 0, DEVICE_NAME,
-    DEVICE_CORE_CONF, DEVICE_RSSI
+    DEVICE_ADDRESS = 0,
+    DEVICE_NAME,
+    DEVICE_CORE_CONF,
+    DEVICE_RSSI
 } device_table_column_index;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
@@ -108,8 +110,13 @@ void MainWindow::addDevice(QBluetoothDeviceInfo info)
     }
 
     ui->devicesTableWidget->setItem(device_record_row, DEVICE_ADDRESS,   device_addr_item);
+    ui->devicesTableWidget->setColumnHidden(DEVICE_ADDRESS, true);
+
     ui->devicesTableWidget->setItem(device_record_row, DEVICE_NAME,      device_name_item);
+
     ui->devicesTableWidget->setItem(device_record_row, DEVICE_CORE_CONF, device_configuration_item);
+    ui->devicesTableWidget->setColumnHidden(DEVICE_CORE_CONF, true);
+
     ui->devicesTableWidget->setItem(device_record_row, DEVICE_RSSI,      device_rssi_item);
 }
 
