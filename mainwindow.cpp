@@ -13,7 +13,7 @@ typedef enum {
 typedef enum {
     DEVICE_ADDRESS = 0,
     DEVICE_NAME,
-    DEVICE_CORE_CONF,
+//    DEVICE_CORE_CONF,
     DEVICE_RSSI
 } device_table_column_index;
 
@@ -34,9 +34,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(mDiscoveryAgent, SIGNAL(canceled()), this, SLOT(deviceDiscoveryCanceled()));
 
     // a table displaying the infromation about Bluetooth devices
-    ui->devicesTableWidget->setColumnCount(4);
+//    ui->devicesTableWidget->setColumnCount(4);
+    ui->devicesTableWidget->setColumnCount(3);
     QStringList headerLabels;
-    headerLabels << "Address" << "Name" << "Configuration" << "RSSI, dB";
+//    headerLabels << "Address" << "Name" << "Configuration" << "RSSI, dB";
+    headerLabels << "Address" << "Name" << "RSSI, dB";
     ui->devicesTableWidget->setHorizontalHeaderLabels(headerLabels);
 
     ui->devicesTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -69,12 +71,13 @@ void MainWindow::addDevice(QBluetoothDeviceInfo info)
     QString bluetooth_device_name = info.name();
     QString bluetooth_device_addr = info.address().toString();
 
-    QString bluetooth_device_configuration = "";
+//    QString bluetooth_device_configuration = "";
+    bool isBle = false;
     QBluetoothDeviceInfo::CoreConfigurations cconf = info.coreConfigurations();
-    if (cconf.testFlag(QBluetoothDeviceInfo::LowEnergyCoreConfiguration))            { bluetooth_device_configuration.append("BLE"); }
-    if (cconf.testFlag(QBluetoothDeviceInfo::UnknownCoreConfiguration))              { bluetooth_device_configuration.append("Unknown"); }
-    if (cconf.testFlag(QBluetoothDeviceInfo::BaseRateCoreConfiguration))             { bluetooth_device_configuration.append("Standard"); }
-    if (cconf.testFlag(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration)) { bluetooth_device_configuration.append("BLE & Standard"); }
+    if (cconf.testFlag(QBluetoothDeviceInfo::LowEnergyCoreConfiguration))            { isBle = true;    /*bluetooth_device_configuration.append("BLE");*/ }
+    if (cconf.testFlag(QBluetoothDeviceInfo::UnknownCoreConfiguration))              { isBle = false;   /*bluetooth_device_configuration.append("Unknown");*/ }
+    if (cconf.testFlag(QBluetoothDeviceInfo::BaseRateCoreConfiguration))             { isBle = false;   /*bluetooth_device_configuration.append("Standard");*/ }
+    if (cconf.testFlag(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration)) { isBle = true;    /*bluetooth_device_configuration.append("BLE & Standard");*/ }
 
     QString rssi = QString::number(info.rssi(), 10);
 
@@ -86,8 +89,8 @@ void MainWindow::addDevice(QBluetoothDeviceInfo info)
     QTableWidgetItem *device_name_item = new QTableWidgetItem();
     device_name_item->setText(bluetooth_device_name);
 
-    QTableWidgetItem *device_configuration_item = new QTableWidgetItem();
-    device_configuration_item->setText(bluetooth_device_configuration);
+//    QTableWidgetItem *device_configuration_item = new QTableWidgetItem();
+//    device_configuration_item->setText(bluetooth_device_configuration);
 
     QTableWidgetItem *device_rssi_item = new QTableWidgetItem();
     device_rssi_item->setText(rssi);
@@ -104,7 +107,7 @@ void MainWindow::addDevice(QBluetoothDeviceInfo info)
     }
 
     // add a new row
-    if (!device_record_found) {
+    if (!device_record_found && isBle) {
         int row = ui->devicesTableWidget->rowCount();
         ui->devicesTableWidget->setRowCount(row + 1);
     }
@@ -114,8 +117,8 @@ void MainWindow::addDevice(QBluetoothDeviceInfo info)
 
     ui->devicesTableWidget->setItem(device_record_row, DEVICE_NAME,      device_name_item);
 
-    ui->devicesTableWidget->setItem(device_record_row, DEVICE_CORE_CONF, device_configuration_item);
-    ui->devicesTableWidget->setColumnHidden(DEVICE_CORE_CONF, true);
+//    ui->devicesTableWidget->setItem(device_record_row, DEVICE_CORE_CONF, device_configuration_item);
+//    ui->devicesTableWidget->setColumnHidden(DEVICE_CORE_CONF, true);
 
     ui->devicesTableWidget->setItem(device_record_row, DEVICE_RSSI,      device_rssi_item);
 }
