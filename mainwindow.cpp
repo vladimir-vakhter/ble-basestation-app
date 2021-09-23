@@ -34,10 +34,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(mDiscoveryAgent, SIGNAL(canceled()), this, SLOT(deviceDiscoveryCanceled()));
 
     // a table displaying the infromation about Bluetooth devices
-//    ui->devicesTableWidget->setColumnCount(4);
     ui->devicesTableWidget->setColumnCount(3);
     QStringList headerLabels;
-//    headerLabels << "Address" << "Name" << "Configuration" << "RSSI, dB";
     headerLabels << "Address" << "Name" << "RSSI, dB";
     ui->devicesTableWidget->setHorizontalHeaderLabels(headerLabels);
 
@@ -53,6 +51,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // update the status of the BLE discovery process
     ui->scanningIndicatorLabel->setStyleSheet("QLabel { background-color : white; color : red; }");
     ui->scanningIndicatorLabel->setText("Scanning...");
+
+    // enable the horizontal scroll bar for
+    ui->bleServicesTreeWidget->setColumnCount(1);
+    ui->bleServicesTreeWidget->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+    ui->bleServicesTreeWidget->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    ui->bleServicesTreeWidget->header()->setStretchLastSection(false);
 }
 
 MainWindow::~MainWindow()
@@ -70,6 +74,10 @@ void MainWindow::addDevice(QBluetoothDeviceInfo info)
     // retrive the information about a Bluetooth device
     QString bluetooth_device_name = info.name();
     QString bluetooth_device_addr = info.address().toString();
+
+    if (bluetooth_device_name.length() == 0) {
+        bluetooth_device_name = "unknown";
+    }
 
 //    QString bluetooth_device_configuration = "";
     bool isBle = false;
@@ -179,6 +187,7 @@ void MainWindow::socketRead()
 void MainWindow::bleServiceDiscovered(const QBluetoothUuid &gatt)
 {
     QTreeWidgetItem *it = new QTreeWidgetItem();
+//    it->setExpanded(false);
     QLowEnergyService *bleService = mBLEControl->createServiceObject(gatt);
 
     if (bleService) {
