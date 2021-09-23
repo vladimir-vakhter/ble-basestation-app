@@ -11,8 +11,10 @@ typedef enum {
 } output_format_type;
 
 typedef enum {
-    DEVICE_ADDRESS = 0, DEVICE_NAME,
-    DEVICE_CORE_CONF, DEVICE_RSSI
+    DEVICE_ADDRESS = 0,
+    DEVICE_NAME,
+//    DEVICE_CORE_CONF,
+    DEVICE_RSSI
 } device_table_column_index;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
@@ -32,9 +34,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(mDiscoveryAgent, SIGNAL(canceled()), this, SLOT(deviceDiscoveryCanceled()));
 
     // a table displaying the infromation about Bluetooth devices
-    ui->devicesTableWidget->setColumnCount(4);
+//    ui->devicesTableWidget->setColumnCount(4);
+    ui->devicesTableWidget->setColumnCount(3);
     QStringList headerLabels;
-    headerLabels << "Address" << "Name" << "Configuration" << "RSSI, dB";
+//    headerLabels << "Address" << "Name" << "Configuration" << "RSSI, dB";
+    headerLabels << "Address" << "Name" << "RSSI, dB";
     ui->devicesTableWidget->setHorizontalHeaderLabels(headerLabels);
 
     ui->devicesTableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -67,12 +71,13 @@ void MainWindow::addDevice(QBluetoothDeviceInfo info)
     QString bluetooth_device_name = info.name();
     QString bluetooth_device_addr = info.address().toString();
 
-    QString bluetooth_device_configuration = "";
+//    QString bluetooth_device_configuration = "";
+    bool isBle = false;
     QBluetoothDeviceInfo::CoreConfigurations cconf = info.coreConfigurations();
-    if (cconf.testFlag(QBluetoothDeviceInfo::LowEnergyCoreConfiguration))            { bluetooth_device_configuration.append("BLE"); }
-    if (cconf.testFlag(QBluetoothDeviceInfo::UnknownCoreConfiguration))              { bluetooth_device_configuration.append("Unknown"); }
-    if (cconf.testFlag(QBluetoothDeviceInfo::BaseRateCoreConfiguration))             { bluetooth_device_configuration.append("Standard"); }
-    if (cconf.testFlag(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration)) { bluetooth_device_configuration.append("BLE & Standard"); }
+    if (cconf.testFlag(QBluetoothDeviceInfo::LowEnergyCoreConfiguration))            { isBle = true;    /*bluetooth_device_configuration.append("BLE");*/ }
+    if (cconf.testFlag(QBluetoothDeviceInfo::UnknownCoreConfiguration))              { isBle = false;   /*bluetooth_device_configuration.append("Unknown");*/ }
+    if (cconf.testFlag(QBluetoothDeviceInfo::BaseRateCoreConfiguration))             { isBle = false;   /*bluetooth_device_configuration.append("Standard");*/ }
+    if (cconf.testFlag(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration)) { isBle = true;    /*bluetooth_device_configuration.append("BLE & Standard");*/ }
 
     QString rssi = QString::number(info.rssi(), 10);
 
@@ -84,8 +89,8 @@ void MainWindow::addDevice(QBluetoothDeviceInfo info)
     QTableWidgetItem *device_name_item = new QTableWidgetItem();
     device_name_item->setText(bluetooth_device_name);
 
-    QTableWidgetItem *device_configuration_item = new QTableWidgetItem();
-    device_configuration_item->setText(bluetooth_device_configuration);
+//    QTableWidgetItem *device_configuration_item = new QTableWidgetItem();
+//    device_configuration_item->setText(bluetooth_device_configuration);
 
     QTableWidgetItem *device_rssi_item = new QTableWidgetItem();
     device_rssi_item->setText(rssi);
@@ -102,14 +107,19 @@ void MainWindow::addDevice(QBluetoothDeviceInfo info)
     }
 
     // add a new row
-    if (!device_record_found) {
+    if (!device_record_found && isBle) {
         int row = ui->devicesTableWidget->rowCount();
         ui->devicesTableWidget->setRowCount(row + 1);
     }
 
     ui->devicesTableWidget->setItem(device_record_row, DEVICE_ADDRESS,   device_addr_item);
+    ui->devicesTableWidget->setColumnHidden(DEVICE_ADDRESS, true);
+
     ui->devicesTableWidget->setItem(device_record_row, DEVICE_NAME,      device_name_item);
-    ui->devicesTableWidget->setItem(device_record_row, DEVICE_CORE_CONF, device_configuration_item);
+
+//    ui->devicesTableWidget->setItem(device_record_row, DEVICE_CORE_CONF, device_configuration_item);
+//    ui->devicesTableWidget->setColumnHidden(DEVICE_CORE_CONF, true);
+
     ui->devicesTableWidget->setItem(device_record_row, DEVICE_RSSI,      device_rssi_item);
 }
 
@@ -154,20 +164,6 @@ void MainWindow::deviceDiscoveryFinished()
         );
     }
 }
-
-void MainWindow::addService(QBluetoothServiceInfo info)
-{
-    QString str = QString("%1 %2").arg(info.serviceName()).arg(info.serviceUuid().toString());
-
-    QListWidgetItem *it = new QListWidgetItem();
-
-    it->setData(Qt::UserRole, QVariant::fromValue(info));
-    it->setText(str); //info.serviceName());
-
-    ui->servicesListWidget->addItem(it);
-}
-
-void MainWindow::addServiceDone() { ui->servicesPushButton->setEnabled(true); }
 
 void MainWindow::socketRead()
 {
@@ -344,85 +340,6 @@ void MainWindow::bleServiceCharacteristicRead(const QLowEnergyCharacteristic& in
     QString header = "Read";
     bleServiceCharacteristicReadNotify(header, value);
 }
-
-void MainWindow::on_servicesPushButton_clicked()
-{
-    #ifdef DEBUG
-        qDebug() << "on_servicesPushButton_clicked() has been called";
-    #endif
-
-    ui->servicesPushButton->setEnabled(false);
-    ui->servicesListWidget->clear();
-
-    QTableWidgetItem *it = ui->devicesTableWidget->currentItem();
-
-    QBluetoothDeviceInfo info = it->data(Qt::UserRole).value<QBluetoothDeviceInfo>();
-
-    qDebug() << info.name();
-    qDebug() << info.address();
-
-
-    mServiceDiscoveryAgent = new QBluetoothServiceDiscoveryAgent();
-    mServiceDiscoveryAgent->setRemoteAddress(info.address());
-
-    if (mServiceDiscoveryAgent->error()) {
-        qDebug() << "wrong device address";
-    }
-
-    connect(mServiceDiscoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
-            this, SLOT(addService(QBluetoothServiceInfo)));
-    connect(mServiceDiscoveryAgent, SIGNAL(finished()),
-            this, SLOT(addServiceDone()));
-//    connect(mServiceDiscoveryAgent, QOverload<QBluetoothServiceDiscoveryAgent::Error>::of(&QBluetoothServiceDiscoveryAgent::error),
-//        [=](QBluetoothServiceDiscoveryAgent::Error error){ qDebug() << error; ui->servicesPushButton->setEnabled(true); });
-
-    mServiceDiscoveryAgent->start();
-}
-
-void MainWindow::on_connectPushButton_clicked()
-{
-    #ifdef DEBUG
-        qDebug() << "on_connectPushButton_clicked() has been called";
-    #endif
-
-    QBluetoothServiceInfo remoteService;
-
-    QListWidgetItem *it = ui->servicesListWidget->currentItem();
-
-    if (!it) return;
-
-    QBluetoothServiceInfo info = it->data(Qt::UserRole).value<QBluetoothServiceInfo>();
-
-    qDebug () << info.serviceName();
-    qDebug () << info.serviceUuid();
-    qDebug () << info.serviceDescription();
-
-    //info.setServiceUuid(QBluetoothUuid((quint16)0x2A19));
-    qDebug () << info.serviceUuid();
-
-    if (mSocket) {
-        qDebug() << "socket exists, deleting";
-        disconnect(mSocket, SIGNAL(readyRead()), this, SLOT(socketRead()));
-        disconnect(mSocket, SIGNAL(connected()), this, SLOT(socketConnected()));
-        disconnect(mSocket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
-        //disconnect(mSocket, SIGNAL(error ()), this, SLOT(socketError()));
-        mSocket->disconnectFromService();
-        delete(mSocket);
-    }
-
-    // Connect to service
-    mSocket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
-
-    qDebug() << "Create socket";
-    mSocket->connectToService(info);
-    qDebug() << "ConnectToService done";
-
-    connect(mSocket, SIGNAL(readyRead()), this, SLOT(socketRead()));
-    connect(mSocket, SIGNAL(connected()), this, SLOT(socketConnected()));
-    connect(mSocket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
-    //connect(mSocket, SIGNAL(error()), this, SLOT(socketError()));
-}
-
 
 void MainWindow::on_bleConnectPushButton_clicked()
 {
