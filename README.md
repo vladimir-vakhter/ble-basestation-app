@@ -1,6 +1,6 @@
 # ble-basestation-app
 This application is used to:
-1. Discover/scan for Bluetooth LE devices.
+1. Discover/scan for Bluetooth LE and mixed (standard Bluetooth & BLE) devices.
 2. Display the name and the RSSI[dB] for each discovered device.
 3. Connect to/disconnect from the discovered device.
 4. Display the Bluetooth services and characteristics of the connected device.
